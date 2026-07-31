@@ -1644,11 +1644,6 @@ function renderRoomChoice(){
   createBtn.addEventListener('click', ()=>{ state.screen='roomCreateCategory'; render(); });
   wrap.appendChild(createBtn);
 
-  const survivalBtn = el('button','btn','🔥 Modo Supervivencia');
-  survivalBtn.style.background = 'linear-gradient(135deg, var(--danger), #FF9B3C)';
-  survivalBtn.addEventListener('click', ()=> createRoom(null, null, null, 'survival'));
-  wrap.appendChild(survivalBtn);
-
   const joinBtn = el('button','btn secondary','🔑 Unirme con un código');
   joinBtn.addEventListener('click', ()=>{ state.screen='roomJoin'; render(); });
   wrap.appendChild(joinBtn);
@@ -1664,12 +1659,11 @@ function renderRoomCreateCategory(){
   app.appendChild(wrap);
 }
 
-async function createRoom(categoryKey, subKey, count, mode){
-  mode = mode || 'normal';
+async function createRoom(categoryKey, subKey, count){
   const code = randCode();
-  const questions = mode === 'survival' ? shuffle(SURVIVAL_QUESTIONS) : shuffle(pool(categoryKey, subKey)).slice(0, count);
+  const questions = shuffle(pool(categoryKey, subKey)).slice(0, count);
   const meta = {
-    code, category: categoryKey, subcategory: subKey, status: 'lobby', mode,
+    code, category: categoryKey, subcategory: subKey, status: 'lobby',
     currentQuestion: -1, questionStartTime: null, questions,
     hostId: state.myId, createdAt: Date.now()
   };
@@ -1679,7 +1673,7 @@ async function createRoom(categoryKey, subKey, count, mode){
   }
   try{
     await window.storage.set('room:'+code+':meta', JSON.stringify(meta), true);
-    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0, avatarId:state.avatarId, isEliminated:false}), true);
+    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0, avatarId:state.avatarId}), true);
   }catch(e){ console.error('createRoom error:', e); alert('No se pudo crear la sala: ' + (e && e.message ? e.message : e)); return; }
 
   state.roomCode = code;
@@ -1725,7 +1719,7 @@ async function joinRoom(code){
   if(!metaRes){ alert('No encontramos esa sala. Revisa el código.'); return; }
   const meta = JSON.parse(metaRes.value);
   try{
-    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0, avatarId:state.avatarId, isEliminated:false}), true);
+    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0, avatarId:state.avatarId}), true);
   }catch(e){ console.error('joinRoom set error:', e); alert('No se pudo unir a la sala: ' + (e && e.message ? e.message : e)); return; }
 
   state.roomCode = code;
@@ -1815,7 +1809,8 @@ async function advanceRoomQuestion(meta){
 function renderRoomLobby(){
   state.roomCoinsAwarded = false;
   const wrap = el('div','screen');
-  const isSurvival = state.roomMeta.mode === 'survival';
+  const cat = CATEGORIES[state.roomMeta.category];
+  const sub = cat.subcategories[state.roomMeta.subcategory];
 
   wrap.appendChild(el('div','tagline','Sala de espera'));
   wrap.appendChild(el('div','code-display', state.roomCode));
@@ -1828,27 +1823,14 @@ function renderRoomLobby(){
   pillRow.style.gap='8px';
   pillRow.style.justifyContent='center';
   pillRow.style.flexWrap='wrap';
-  if(isSurvival){
-    const catPill = el('div','pill', '🔥 Supervivencia');
-    catPill.style.background='rgba(255,255,255,0.08)';
-    catPill.style.color = 'var(--danger)';
-    pillRow.appendChild(catPill);
-    const infoPill = el('div','pill', '⚠️ El que falla, queda eliminado');
-    infoPill.style.background='rgba(255,255,255,0.08)';
-    infoPill.style.color = 'var(--text)';
-    pillRow.appendChild(infoPill);
-  } else {
-    const cat = CATEGORIES[state.roomMeta.category];
-    const sub = cat.subcategories[state.roomMeta.subcategory];
-    const catPill = el('div','pill', sub.emoji+' '+sub.label);
-    catPill.style.background='rgba(255,255,255,0.08)';
-    catPill.style.color = cat.color;
-    const countPill = el('div','pill', '🔢 '+state.roomMeta.questions.length+' preguntas');
-    countPill.style.background='rgba(255,255,255,0.08)';
-    countPill.style.color = 'var(--text)';
-    pillRow.appendChild(catPill);
-    pillRow.appendChild(countPill);
-  }
+  const catPill = el('div','pill', sub.emoji+' '+sub.label);
+  catPill.style.background='rgba(255,255,255,0.08)';
+  catPill.style.color = cat.color;
+  const countPill = el('div','pill', '🔢 '+state.roomMeta.questions.length+' preguntas');
+  countPill.style.background='rgba(255,255,255,0.08)';
+  countPill.style.color = 'var(--text)';
+  pillRow.appendChild(catPill);
+  pillRow.appendChild(countPill);
   wrap.appendChild(pillRow);
 
   const card = el('div','card');
@@ -1897,15 +1879,16 @@ let roomGameLeaderboardEl = null;
 function renderRoomGame(){
   if(roomTimerRAF) cancelAnimationFrame(roomTimerRAF);
   const meta = state.roomMeta;
+  const cat = CATEGORIES[meta.category];
+  const sub = cat.subcategories[meta.subcategory];
   const q = meta.questions[meta.currentQuestion];
   const me = state.roomPlayers.find(p=>p.id===state.myId) || {score:0};
-  const iAmEliminated = meta.mode==='survival' && me.isEliminated;
 
   const wrap = el('div','screen');
   const hud = el('div','hud');
-  const scoreEl = el('div','score', meta.mode==='survival' ? '🔥 Supervivencia' : ('⭐ ' + me.score));
+  const scoreEl = el('div','score','⭐ ' + me.score);
   hud.appendChild(scoreEl);
-  hud.appendChild(el('div','qcount', (meta.currentQuestion+1) + (meta.mode==='survival' ? '' : (' / ' + meta.questions.length))));
+  hud.appendChild(el('div','qcount', (meta.currentQuestion+1) + ' / ' + meta.questions.length));
   wrap.appendChild(hud);
   roomGameHudScoreEl = scoreEl;
 
@@ -1915,41 +1898,34 @@ function renderRoomGame(){
   wrap.appendChild(timerWrap);
 
   const card = el('div','card');
-  if(meta.mode==='survival'){
-    const survivorsCount = state.roomPlayers.filter(p=>!p.isEliminated).length;
-    const catPill = el('div','pill', '🔥 '+survivorsCount+' sobreviviendo');
-    catPill.style.background='rgba(255,255,255,0.08)';
-    catPill.style.color = 'var(--danger)';
-    card.appendChild(catPill);
-  } else {
-    const cat = CATEGORIES[meta.category];
-    const sub = cat.subcategories[meta.subcategory];
-    const catPill = el('div','pill', sub.emoji+' '+sub.label);
-    catPill.style.background='rgba(255,255,255,0.08)';
-    catPill.style.color = cat.color;
-    card.appendChild(catPill);
-  }
+  const catPill = el('div','pill', sub.emoji+' '+sub.label);
+  catPill.style.background='rgba(255,255,255,0.08)';
+  catPill.style.color = cat.color;
+  card.appendChild(catPill);
   card.appendChild(el('div','question-text', q.q));
 
-  if(iAmEliminated){
-    card.appendChild(el('div','muted center','Estás eliminado — esperando a que termine la ronda…'));
-  } else {
-    const opts = el('div','options');
-    const letters = ['A','B','C','D'];
-    q.opts.forEach((optText,i)=>{
-      const o = el('button','option');
-      o.appendChild(el('div','letter', letters[i]));
-      o.appendChild(el('span','', optText));
-      if(state.myAnswered) o.classList.add('locked');
-      o.addEventListener('click', ()=> roomAnswer(i, q, opts));
-      opts.appendChild(o);
-    });
-    card.appendChild(opts);
-  }
+  const opts = el('div','options');
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((optText,i)=>{
+    const o = el('button','option');
+    o.appendChild(el('div','letter', letters[i]));
+    o.appendChild(el('span','', optText));
+    if(state.myAnswered) o.classList.add('locked');
+    o.addEventListener('click', ()=> roomAnswer(i, q, opts));
+    opts.appendChild(o);
+  });
+  card.appendChild(opts);
   wrap.appendChild(card);
 
+  const mini = el('div','card');
+  mini.style.padding='14px 18px';
+  const sorted = state.roomPlayers.slice(0,3);
+  const rowline = el('div','muted','En cabeza: ' + (sorted.map(p=>p.name+' ('+p.score+')').join(' · ') || '—'));
+  mini.appendChild(rowline);
+  wrap.appendChild(mini);
+  roomGameLeaderboardEl = rowline;
+
   app.appendChild(wrap);
-  renderEliminationOverlayIfNeeded();
 
   function tick(){
     const elapsed = (Date.now() - meta.questionStartTime)/1000;
@@ -1963,11 +1939,11 @@ function renderRoomGame(){
 }
 
 function updateRoomGameLive(){
-  if(!roomGameHudScoreEl) return;
-  const meta = state.roomMeta;
+  if(!roomGameHudScoreEl || !roomGameLeaderboardEl) return;
   const me = state.roomPlayers.find(p=>p.id===state.myId) || {score:0};
-  roomGameHudScoreEl.textContent = meta.mode==='survival' ? '🔥 Supervivencia' : ('⭐ ' + me.score);
-  checkForNewEliminations();
+  roomGameHudScoreEl.textContent = '⭐ ' + me.score;
+  const sorted = state.roomPlayers.slice(0,3);
+  roomGameLeaderboardEl.textContent = 'En cabeza: ' + (sorted.map(p=>p.name+' ('+p.score+')').join(' · ') || '—');
 }
 
 async function roomAnswer(choice, q, optsEl){
