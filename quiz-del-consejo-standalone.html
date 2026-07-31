@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#150829;
+    --bg-mid:#241147;
+    --card:rgba(255,255,255,0.06);
+    --card-border:rgba(255,255,255,0.12);
+    --text:#F5F2FF;
+    --text-dim:#B8AFD9;
+    --deportes:#8CFF6B;
+    --cultura:#FFC93C;
+    --peliculas:#FF4FA3;
+    --redes:#34D2FF;
+    --danger:#FF5B5B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Poppins', sans-serif;
+    background: radial-gradient(circle at 20% 20%, var(--bg-mid), var(--bg-deep) 60%);
+    color:var(--text);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  .blob{
+    position:fixed;
+    border-radius:50%;
+    filter:blur(70px);
+    opacity:0.35;
+    z-index:0;
+    animation:float 14s ease-in-out infinite;
+    pointer-events:none;
+  }
+  .blob1{width:340px;height:340px;background:var(--peliculas);top:-100px;left:-100px;animation-delay:0s;}
+  .blob2{width:280px;height:280px;background:var(--redes);bottom:-80px;right:-60px;animation-delay:3s;}
+  .blob3{width:260px;height:260px;background:var(--deportes);bottom:20%;left:-120px;animation-delay:6s;}
+  .blob4{width:220px;height:220px;background:var(--cultura);top:10%;right:-80px;animation-delay:9s;}
+  @keyframes float{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(30px,-30px) scale(1.08);}
+  }
+  #app{
+    position:relative;
+    z-index:1;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 18px 60px;
+  }
+  h1,h2,h3{font-family:'Baloo 2', sans-serif;}
+  .logo{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(2.2rem, 7vw, 3.4rem);
+    text-align:center;
+    letter-spacing:-1px;
+    margin-bottom:6px;
+    background:linear-gradient(90deg, var(--deportes), var(--cultura), var(--peliculas), var(--redes));
+    background-size:300% 100%;
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    animation:gradientshift 6s ease infinite;
+  }
+  @keyframes gradientshift{
+    0%,100%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+  }
+  .tagline{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:1rem;
+    margin-bottom:36px;
+    font-weight:500;
+  }
+  .screen{
+    width:100%;
+    max-width:520px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    animation:fadein .35s ease;
+  }
+  @keyframes fadein{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:24px;
+    padding:24px;
+    backdrop-filter:blur(14px);
+  }
+  .btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:1.15rem;
+    border:none;
+    border-radius:18px;
+    padding:18px 20px;
+    cursor:pointer;
+    color:#150829;
+    background:linear-gradient(90deg,#8CFF6B,#34D2FF);
+    transition:transform .15s ease, box-shadow .15s ease;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+  }
+  .btn:hover{transform:translateY(-2px) scale(1.015); box-shadow:0 8px 24px rgba(140,255,107,0.25);}
+  .btn:active{transform:translateY(0) scale(0.98);}
+  .btn.secondary{
+    background:rgba(255,255,255,0.08);
+    color:var(--text);
+    border:1px solid var(--card-border);
+  }
+  .btn.secondary:hover{box-shadow:0 8px 20px rgba(255,255,255,0.08);}
+  .btn:disabled{opacity:.45; cursor:not-allowed; transform:none; box-shadow:none;}
+
+  input[type=text]{
+    font-family:'Poppins', sans-serif;
+    font-size:1.05rem;
+    padding:16px 18px;
+    border-radius:16px;
+    border:1px solid var(--card-border);
+    background:rgba(255,255,255,0.05);
+    color:var(--text);
+    width:100%;
+    outline:none;
+    letter-spacing:1px;
+  }
+  input[type=text]:focus{border-color:var(--redes);}
+  input[type=text]::placeholder{color:var(--text-dim);}
+  label.field-label{font-size:.8rem; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; display:block;}
+
+  .cat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .cat-card{
+    border-radius:20px;
+    padding:20px 14px;
+    cursor:pointer;
+    border:2px solid transparent;
+    text-align:center;
+    transition:transform .15s ease, border-color .15s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:1.05rem;
+  }
+  .cat-card:hover{transform:translateY(-4px);}
+  .cat-card .emoji{font-size:2.2rem;}
+  .cat-deportes{background:linear-gradient(160deg, rgba(140,255,107,0.25), rgba(140,255,107,0.08)); color:var(--deportes);}
+  .cat-cultura{background:linear-gradient(160deg, rgba(255,201,60,0.25), rgba(255,201,60,0.08)); color:var(--cultura);}
+  .cat-peliculas{background:linear-gradient(160deg, rgba(255,79,163,0.25), rgba(255,79,163,0.08)); color:var(--peliculas);}
+  .cat-redes{background:linear-gradient(160deg, rgba(52,210,255,0.25), rgba(52,210,255,0.08)); color:var(--redes);}
+
+  .count-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+  }
+  .count-card{
+    border-radius:16px;
+    padding:18px 8px;
+    text-align:center;
+    cursor:pointer;
+    border:2px solid var(--card-border);
+    background:rgba(255,255,255,0.04);
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.3rem;
+    transition:all .15s ease;
+  }
+  .count-card:hover{border-color:var(--redes); transform:translateY(-3px);}
+  .count-card .sub{display:block; font-family:'Poppins'; font-weight:500; font-size:.68rem; color:var(--text-dim); margin-top:2px; text-transform:uppercase; letter-spacing:.5px;}
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 14px;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+  }
+  .topbar{
+    width:100%; max-width:520px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:6px;
+  }
+  .back{
+    background:none; border:none; color:var(--text-dim); cursor:pointer;
+    font-family:'Poppins'; font-weight:600; font-size:.9rem;
+    display:flex; align-items:center; gap:4px;
+  }
+  .back:hover{color:var(--text);}
+
+  .hud{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:4px;
+  }
+  .hud .score{font-family:'Baloo 2'; font-weight:800; font-size:1.3rem;}
+  .timer-wrap{
+    width:100%; height:10px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden; margin-bottom:6px;
+  }
+  .timer-bar{
+    height:100%; border-radius:999px;
+    background:linear-gradient(90deg,var(--deportes),var(--cultura));
+    transition:width .2s linear;
+  }
+  .qcount{color:var(--text-dim); font-size:.85rem; font-weight:600;}
+
+  .question-text{
+    font-family:'Baloo 2'; font-weight:700; font-size:1.35rem; line-height:1.35; margin:14px 0 6px;
+  }
+  .options{display:flex; flex-direction:column; gap:12px; margin-top:10px;}
+  .option{
+    text-align:left;
+    padding:16px 18px;
+    border-radius:16px;
+    border:2px solid var(--card-border);
+    background:rgba(255,255,255,0.04);
+    color:var(--text);
+    font-family:'Poppins'; font-weight:600; font-size:1rem;
+    cursor:pointer;
+    transition:all .15s ease;
+    display:flex; align-items:center; gap:12px;
+  }
+  .option .letter{
+    width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,0.08);
+    display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:800; flex-shrink:0;
+  }
+  .option:hover:not(.locked){border-color:var(--redes); transform:translateX(3px);}
+  .option.correct{background:rgba(140,255,107,0.18); border-color:var(--deportes);}
+  .option.wrong{background:rgba(255,91,91,0.18); border-color:var(--danger);}
+  .option.locked{cursor:default;}
+
+  .streak{
+    display:flex; align-items:center; gap:6px; color:var(--cultura); font-weight:700; font-size:.9rem;
+  }
+  .points-toast{
+    text-align:center; font-family:'Baloo 2'; font-weight:800; font-size:1.1rem; color:var(--deportes);
+  }
+
+  .player-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; border-radius:14px; background:rgba(255,255,255,0.04); margin-bottom:8px;
+  }
+  .player-row .name{font-weight:600; display:flex; align-items:center; gap:8px;}
+  .player-row .avatar{
+    width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:.85rem; color:#150829;
+  }
+  .player-row .pts{font-family:'Baloo 2'; font-weight:800;}
+
+  .rank-1{background:linear-gradient(135deg,#FFD86B,#FF9B3C);}
+  .rank-2{background:linear-gradient(135deg,#E0E0E0,#A9A9C7);}
+  .rank-3{background:linear-gradient(135deg,#E0A65B,#B5722C);}
+
+  .code-display{
+    font-family:'Baloo 2'; font-weight:800; font-size:2.4rem; text-align:center;
+    letter-spacing:10px; background:rgba(255,255,255,0.06); border-radius:18px; padding:18px 10px;
+    border:2px dashed var(--card-border);
+  }
+
+  .muted{color:var(--text-dim); font-size:.9rem;}
+  .center{text-align:center;}
+
+  .result-emoji{font-size:4rem; text-align:center; margin-bottom:4px;}
+
+  footer.foot{
+    margin-top:40px; color:var(--text-dim); font-size:.8rem; text-align:center;
+  }
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15); border-radius:8px;}
+
+  .confetti-piece{
+    position:fixed; top:-10px; width:9px; height:14px; z-index:50; pointer-events:none;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{transform:translateY(110vh) rotate(540deg); opacity:0.3;}
+  }
+
+  @media (max-width:420px){
+    .code-display{font-size:1.9rem; letter-spacing:6px;}
+    .count-grid{grid-template-columns:repeat(3,1fr); gap:8px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .blob, .logo{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+<div class="blob blob4"></div>
+
+<div id="app"></div>
+
+<script>
+/* ---------------------------------------------------------
+   ALMACENAMIENTO PROPIO (Firebase Realtime Database)
+   Reemplaza el "window.storage" especial de claude.ai por una
+   base de datos real, para que la sala funcione en cualquier
+   sitio donde subas este archivo.
+
+   PASOS PARA CONFIGURAR (una sola vez, gratis):
+   1. Entra a https://console.firebase.google.com/ e inicia sesión
+      con tu cuenta de Google.
+   2. Crea un proyecto nuevo (el nombre no importa).
+   3. En el menú izquierdo: Build > Realtime Database > Create Database.
+      - Elige cualquier región.
+      - Cuando pregunte por las reglas, elige "Start in test mode".
+   4. Ya creada, ve a la pestaña "Rules" y reemplaza el contenido por:
+        {
+          "rules": {
+            ".read": true,
+            ".write": true
+          }
+        }
+      Dale a "Publish". (Esto hace la base de datos pública para
+      cualquiera que tenga el link — está bien para un juego entre
+      amigos, pero NUNCA metas ahí datos sensibles.)
+   5. Copia la "Database URL" que aparece arriba de los datos
+      (algo como https://tu-proyecto-default-rtdb.firebaseio.com)
+      y pégala abajo reemplazando FIREBASE_URL.
+   6. Sube este archivo .html a donde quieras (GitHub Pages, Netlify,
+      Vercel, tu hosting, o ábrelo directo doble clic) y listo.
+--------------------------------------------------------- */
+const FIREBASE_URL = "PON_AQUI_TU_DATABASE_URL"; // ej: https://tu-proyecto-default-rtdb.firebaseio.com
+
+window.storage = (function(){
+  function checkConfigured(){
+    if(!FIREBASE_URL || FIREBASE_URL.indexOf('PON_AQUI') !== -1){
+      throw new Error('Falta configurar FIREBASE_URL al inicio del archivo. Revisa las instrucciones en el código.');
+    }
+  }
+  function path(key){
+    return FIREBASE_URL.replace(/\/$/,'') + '/store/' + encodeURIComponent(key) + '.json';
+  }
+  return {
+    async set(key, value, shared){
+      checkConfigured();
+      const res = await fetch(path(key), { method:'PUT', body: JSON.stringify(value) });
+      if(!res.ok) throw new Error('Error guardando (' + res.status + '): ' + await res.text());
+      return { key, value, shared: !!shared };
+    },
+    async get(key, shared){
+      checkConfigured();
+      const res = await fetch(path(key));
+      if(!res.ok) throw new Error('Error leyendo (' + res.status + '): ' + await res.text());
+      const value = await res.json();
+      if(value === null) return null;
+      return { key, value, shared: !!shared };
+    },
+    async delete(key, shared){
+      checkConfigured();
+      const res = await fetch(path(key), { method:'DELETE' });
+      if(!res.ok) throw new Error('Error borrando (' + res.status + '): ' + await res.text());
+      return { key, deleted:true, shared: !!shared };
+    },
+    async list(prefix, shared){
+      checkConfigured();
+      const res = await fetch(FIREBASE_URL.replace(/\/$/,'') + '/store.json');
+      if(!res.ok) throw new Error('Error listando (' + res.status + '): ' + await res.text());
+      const all = await res.json() || {};
+      const keys = Object.keys(all)
+        .map(k => decodeURIComponent(k))
+        .filter(k => !prefix || k.startsWith(prefix));
+      return { keys, prefix, shared: !!shared };
+    }
+  };
+})();
+
+/* ---------------------------------------------------------
+   QUIZ GAMES - banco de preguntas
+   4 categorias, deportes tiene 5 subcategorias.
+   40 preguntas por subcategoria/categoria = 320 en total.
+--------------------------------------------------------- */
+const CATEGORIES = {
+  deportes: {
+    label:"Deportes", emoji:"⚽", css:"cat-deportes", color:"var(--deportes)",
+    subcategories: {
+      futbol: { label:"Futbol", emoji:"⚽", questions: [
+        {q:"¿Cuántos jugadores conforman un equipo de fútbol en el campo?", opts:["9","10","11","12"], a:2},
+        {q:"¿Cada cuántos años se celebra el Mundial de fútbol?", opts:["2","3","4","5"], a:2},
+        {q:"¿Qué selección ha ganado más Copas del Mundo?", opts:["Alemania","Argentina","Brasil","Italia"], a:2},
+        {q:"¿En qué país se jugó el Mundial de 2014?", opts:["Brasil","Sudáfrica","Rusia","Catar"], a:0},
+        {q:"¿En qué país se jugó el Mundial de 2018?", opts:["Brasil","Rusia","Catar","Alemania"], a:1},
+        {q:"¿En qué país se jugó el Mundial de 2022?", opts:["Catar","Rusia","Brasil","Francia"], a:0},
+        {q:"¿Cuántos minutos dura un partido de fútbol sin tiempo extra?", opts:["80","90","100","120"], a:1},
+        {q:"¿Qué tarjeta expulsa a un jugador del partido?", opts:["Amarilla","Verde","Roja","Azul"], a:2},
+        {q:"¿Qué jugador argentino es conocido como \"El Pibe de Oro\"?", opts:["Lionel Messi","Diego Maradona","Gabriel Batistuta","Ángel Di María"], a:1},
+        {q:"¿Qué selección ganó el primer Mundial de fútbol en 1930?", opts:["Argentina","Brasil","Uruguay","Italia"], a:2},
+        {q:"¿Quién es el máximo goleador histórico de los Mundiales hasta 2022?", opts:["Pelé","Ronaldo Nazário","Miroslav Klose","Just Fontaine"], a:2},
+        {q:"¿Qué equipo español es conocido como \"Los Blancos\"?", opts:["Atlético de Madrid","Real Madrid","Sevilla","Valencia"], a:1},
+        {q:"¿Qué equipo español es conocido como \"el equipo culé\"?", opts:["Barcelona","Betis","Villarreal","Espanyol"], a:0},
+        {q:"¿Cuántos árbitros principales dirigen un partido de fútbol dentro del campo?", opts:["1","2","3","4"], a:0},
+        {q:"¿Cómo se llama la máxima competición europea de clubes?", opts:["Europa League","Champions League","Copa del Rey","Community Shield"], a:1},
+        {q:"¿Qué país organizó el primer Mundial de fútbol?", opts:["Uruguay","Brasil","Francia","Italia"], a:0},
+        {q:"¿Cómo se le llama a anotar 3 goles en un mismo partido?", opts:["Doblete","Hat-trick","Póker","Triplete de oro"], a:1},
+        {q:"¿Qué jugador ha ganado más veces el Balón de Oro?", opts:["Cristiano Ronaldo","Lionel Messi","Michel Platini","Johan Cruyff"], a:1},
+        {q:"¿Qué jugador defiende la portería de un equipo?", opts:["Portero","Lateral","Delantero","Mediocampista"], a:0},
+        {q:"¿Qué país es considerado la cuna del fútbol moderno?", opts:["España","Inglaterra","Alemania","Escocia"], a:1},
+        {q:"¿Cómo se llama el estadio del FC Barcelona?", opts:["Santiago Bernabéu","Camp Nou","Wanda Metropolitano","Mestalla"], a:1},
+        {q:"¿Cómo se llama el estadio del Real Madrid?", opts:["Camp Nou","San Mamés","Santiago Bernabéu","La Cerámica"], a:2},
+        {q:"¿Qué significan las siglas VAR en el fútbol?", opts:["Árbitro Asistente de Video","Vía de Anotación Rápida","Valoración Automática de Réplicas","Verificación de Área Restringida"], a:0},
+        {q:"¿Cuál era el nombre real de Pelé?", opts:["Edson Arantes do Nascimento","Ronaldo Luís Nazário","Zico Coimbra","Garrincha Silva"], a:0},
+        {q:"¿Cuántos Mundiales ha ganado Alemania hasta 2022?", opts:["2","3","4","5"], a:2},
+        {q:"¿Qué selección ganó la Eurocopa de 2021 (disputada en 2021)?", opts:["Inglaterra","España","Italia","Francia"], a:2},
+        {q:"¿Cómo se llama la liga de fútbol más importante de Inglaterra?", opts:["Premier League","La Liga","Ligue 1","Serie A"], a:0},
+        {q:"¿Cómo se llama la liga de fútbol más importante de Italia?", opts:["Bundesliga","Serie A","Eredivisie","Premier League"], a:1},
+        {q:"¿Cómo se llama la liga de fútbol más importante de Alemania?", opts:["Bundesliga","Serie A","La Liga","Ligue 1"], a:0},
+        {q:"¿Con qué apodo es conocido Cristiano Ronaldo?", opts:["CR9","CR7","El Bicho","El Fenómeno"], a:1},
+        {q:"¿En qué país nació Lionel Messi?", opts:["Uruguay","Chile","Argentina","España"], a:2},
+        {q:"¿En qué país nació Cristiano Ronaldo?", opts:["España","Portugal","Brasil","Italia"], a:1},
+        {q:"¿Cómo se llama el torneo de clubes que reúne a los campeones de Sudamérica?", opts:["Copa América","Copa Libertadores","Copa Sudamericana","Recopa"], a:1},
+        {q:"¿Cuántos títulos mundiales tiene Argentina hasta 2022?", opts:["2","3","4","1"], a:1},
+        {q:"¿Qué selección ganó el Mundial de 2010?", opts:["Holanda","España","Alemania","Brasil"], a:1},
+        {q:"¿Cómo se llama la falta máxima cobrada dentro del área?", opts:["Tiro libre","Córner","Penal","Saque de banda"], a:2},
+        {q:"¿Cuántas sustituciones se permiten habitualmente en un partido oficial moderno?", opts:["3","4","5","6"], a:2},
+        {q:"¿Qué club inglés es conocido como \"los Reds\"?", opts:["Manchester United","Arsenal","Liverpool","Chelsea"], a:2},
+        {q:"¿Qué club inglés es conocido como \"los Diablos Rojos\"?", opts:["Liverpool","Manchester United","Everton","Tottenham"], a:1},
+        {q:"¿Qué selección ganó el Mundial femenino de 2023?", opts:["Estados Unidos","Alemania","España","Inglaterra"], a:2}
+      ]},
+      beisbol: { label:"Béisbol", emoji:"⚾", questions: [
+        {q:"¿Cuántos jugadores hay en el campo por equipo en béisbol?", opts:["8","9","10","11"], a:1},
+        {q:"¿Cuántas entradas tiene un partido de béisbol estándar?", opts:["7","8","9","10"], a:2},
+        {q:"¿Cómo se le llama a batear la pelota fuera del campo, anotando carrera automática?", opts:["Doble","Triple","Jonrón","Sencillo"], a:2},
+        {q:"¿Cuántos strikes eliminan a un bateador?", opts:["2","3","4","5"], a:1},
+        {q:"¿Cuántas bolas malas otorgan base por bolas al bateador?", opts:["3","4","5","6"], a:1},
+        {q:"¿En qué país se originó el béisbol moderno?", opts:["Cuba","México","Estados Unidos","Japón"], a:2},
+        {q:"¿Qué liga profesional agrupa a los equipos de béisbol de EE. UU.?", opts:["NBA","MLB","NFL","NHL"], a:1},
+        {q:"¿Cómo se llama el jugador que lanza la pelota?", opts:["Receptor","Bateador","Lanzador","Jardinero"], a:2},
+        {q:"¿Cómo se llama el jugador que recibe el lanzamiento detrás del bateador?", opts:["Receptor","Campocorto","Lanzador","Inicialista"], a:0},
+        {q:"¿De qué ciudad son los Yankees, franquicia histórica del béisbol?", opts:["Boston","Nueva York","Chicago","Los Ángeles"], a:1},
+        {q:"¿Qué jugador es conocido como \"Babe Ruth\"?", opts:["George Herman Ruth","Joe DiMaggio","Lou Gehrig","Ty Cobb"], a:0},
+        {q:"¿Cómo se llama el campeonato final de la MLB cada año?", opts:["Serie del Caribe","Serie Mundial","Copa MLB","Clásico Nacional"], a:1},
+        {q:"¿Qué elemento usa el bateador para golpear la pelota?", opts:["Bate","Palo","Raqueta","Remo"], a:0},
+        {q:"¿Cómo se llama el área central donde se para el lanzador?", opts:["Base","Montículo","Cajón","Plato"], a:1},
+        {q:"¿Qué país ganó el primer Clásico Mundial de Béisbol en 2006?", opts:["Cuba","República Dominicana","Japón","Estados Unidos"], a:2},
+        {q:"¿Qué país caribeño es reconocido por formar a gran cantidad de peloteros de MLB?", opts:["República Dominicana","Panamá","Costa Rica","Honduras"], a:0},
+        {q:"¿Cómo se llama cuando un lanzador no permite ningún hit en todo el partido?", opts:["Juego perfecto","Blanqueada","No-hitter","Ponche total"], a:2},
+        {q:"¿Cuántos outs se necesitan para terminar una media entrada?", opts:["2","3","4","5"], a:1},
+        {q:"¿Qué usan los jugadores en la mano para atrapar la pelota?", opts:["Guante","Casco","Máscara","Peto"], a:0},
+        {q:"¿Qué equipo tiene más títulos de Serie Mundial en la historia?", opts:["Boston Red Sox","New York Yankees","Los Angeles Dodgers","St. Louis Cardinals"], a:1},
+        {q:"¿Qué significan las siglas MLB?", opts:["Major League Baseball","Minor League Baseball","Master League Baseball","Metropolitan League Baseball"], a:0},
+        {q:"¿Cómo se llama un bateador que puede batear con ambas manos?", opts:["Bateador zurdo","Bateador ambidiestro","Bateador designado","Bateador emergente"], a:1},
+        {q:"¿Cómo se llama la línea que marca el límite del terreno justo?", opts:["Línea de foul","Línea de base","Línea de home","Línea de out"], a:0},
+        {q:"¿Cuántos árbitros dirigen normalmente un juego de MLB en temporada regular?", opts:["2","3","4","5"], a:2},
+        {q:"¿Cómo se llama el lanzamiento curvo característico de un pitcher?", opts:["Recta","Curva","Cambio","Slider"], a:1},
+        {q:"¿En qué ciudad se encuentra el Salón de la Fama del Béisbol?", opts:["Nueva York","Boston","Cooperstown","Chicago"], a:2},
+        {q:"¿Cómo se llama el jugador que defiende entre la segunda y tercera base?", opts:["Campocorto","Inicialista","Antesalista","Receptor"], a:0},
+        {q:"¿Qué significan las siglas RBI en béisbol?", opts:["Carreras impulsadas","Bases robadas","Innings lanzados","Bateo relativo individual"], a:0},
+        {q:"¿Qué país ganó el Clásico Mundial de Béisbol de 2023?", opts:["Estados Unidos","Japón","México","Venezuela"], a:1},
+        {q:"¿Cómo se le llama a llegar a las 4 bases en una sola jugada sin error del rival?", opts:["Doble","Triple","Jonrón","Elevado de sacrificio"], a:2},
+        {q:"¿Qué elemento protege la cabeza del bateador?", opts:["Casco","Guante","Peto","Máscara"], a:0},
+        {q:"¿De qué ciudad son los Red Sox?", opts:["Boston","Nueva York","Baltimore","Filadelfia"], a:0},
+        {q:"¿Qué franquicia con gran tradición y múltiples Series Mundiales juega en Los Ángeles?", opts:["Angels","Dodgers","Padres","Giants"], a:1},
+        {q:"¿Cómo se llama la jugada de eliminar al corredor lanzando a primera antes de que llegue?", opts:["Doble play","Out en primera","Robo frustrado","Toque de sacrificio"], a:1},
+        {q:"¿Cuántos equipos conforman actualmente las Grandes Ligas de béisbol?", opts:["28","30","32","26"], a:1},
+        {q:"¿Qué lanzamiento es conocido por su efecto de caída brusca cerca del bateador?", opts:["Recta","Slider","Cambio de velocidad","Sinker"], a:1},
+        {q:"¿Cómo se le llama a un juego en que ningún bateador rival llega a base?", opts:["Juego perfecto","No-hitter","Blanqueada","Juego sin errores"], a:0},
+        {q:"¿Qué posición defiende el jardín central?", opts:["Jardinero derecho","Jardinero izquierdo","Jardinero central","Campocorto"], a:2},
+        {q:"¿Cómo se le llama al jugador que solo batea sin jugar en el campo, en la liga americana?", opts:["Bateador designado","Bateador emergente","Bateador de poder","Corredor designado"], a:0}
+      ]},
+      baloncesto: { label:"Baloncesto", emoji:"🏀", questions: [
+        {q:"¿Cuántos jugadores forma un equipo de baloncesto en la cancha?", opts:["4","5","6","7"], a:1},
+        {q:"¿Cuántos puntos vale un tiro libre en baloncesto?", opts:["1","2","3","4"], a:0},
+        {q:"¿Cuántos puntos vale un triple?", opts:["1","2","3","4"], a:2},
+        {q:"¿En qué país se inventó el baloncesto?", opts:["Canadá","Estados Unidos","Francia","España"], a:1},
+        {q:"¿Quién inventó el baloncesto?", opts:["James Naismith","Michael Jordan","Red Auerbach","David Stern"], a:0},
+        {q:"¿Cuántos cuartos tiene un partido de la NBA?", opts:["2","3","4","5"], a:2},
+        {q:"¿Cuántos minutos dura cada cuarto en la NBA?", opts:["10","12","15","8"], a:1},
+        {q:"¿Qué liga profesional de baloncesto es la más famosa del mundo?", opts:["Euroliga","NBA","FIBA","NCAA"], a:1},
+        {q:"¿Qué jugador es conocido como \"Air Jordan\"?", opts:["Kobe Bryant","LeBron James","Michael Jordan","Magic Johnson"], a:2},
+        {q:"¿Qué equipo comparte con los Lakers la mayor cantidad histórica de títulos NBA?", opts:["Boston Celtics","Chicago Bulls","Golden State Warriors","San Antonio Spurs"], a:0},
+        {q:"¿Cuántos anillos ganó Michael Jordan con los Bulls?", opts:["4","5","6","7"], a:2},
+        {q:"¿Qué jugador argentino brilló en San Antonio Spurs?", opts:["Emanuel Ginóbili","Luis Scola","Fabricio Oberto","Andrés Nocioni"], a:0},
+        {q:"¿Cómo se llama la línea desde donde se lanza un tiro de 3 puntos?", opts:["Línea de fondo","Línea de triple","Línea de tiro libre","Línea central"], a:1},
+        {q:"¿De qué ciudad son los Lakers de la NBA?", opts:["San Francisco","Los Ángeles","San Diego","Sacramento"], a:1},
+        {q:"¿Qué jugador es apodado \"The King\"?", opts:["Kevin Durant","LeBron James","Stephen Curry","James Harden"], a:1},
+        {q:"¿Qué país ha dominado históricamente el baloncesto olímpico masculino?", opts:["España","Estados Unidos","Argentina","Rusia"], a:1},
+        {q:"¿Cómo se llama la falta que se comete al golpear indebidamente al rival?", opts:["Falta personal","Falta técnica","Violación de pasos","Doble dribleo"], a:0},
+        {q:"¿Qué jugador es apodado \"The Greek Freak\"?", opts:["Nikola Jokić","Luka Dončić","Giannis Antetokounmpo","Joel Embiid"], a:2},
+        {q:"¿Cuántos segundos tiene un equipo para lanzar según el reloj de posesión en la NBA?", opts:["18","20","24","30"], a:2},
+        {q:"¿Qué jugador español ganó campeonatos de la NBA como pívot con los Lakers?", opts:["Pau Gasol","Marc Gasol","Ricky Rubio","Sergio Llull"], a:0},
+        {q:"¿Cuántos puntos anotó Wilt Chamberlain en su histórico partido de 1962?", opts:["80","90","100","110"], a:2},
+        {q:"¿Qué equipo drafteó a LeBron James en 2003?", opts:["Miami Heat","Cleveland Cavaliers","Chicago Bulls","New York Knicks"], a:1},
+        {q:"¿Cómo se llama el máximo torneo de clubes de baloncesto en Europa?", opts:["Eurocup","Euroliga","Copa del Rey","FIBA Champions League"], a:1},
+        {q:"¿Cómo se llama la liga profesional femenina de baloncesto de EE. UU.?", opts:["WNBA","NCAA-W","FIBA Women","NBA Femenil"], a:0},
+        {q:"¿Cómo se le llama a encestar con fuerza pasando el balón por el aro con la mano?", opts:["Bandeja","Mate","Gancho","Triple"], a:1},
+        {q:"¿Qué equipo ganó el primer campeonato de la NBA en 1947?", opts:["Boston Celtics","Philadelphia Warriors","New York Knicks","Minneapolis Lakers"], a:1},
+        {q:"¿Qué jugador tiene el récord histórico de anotación en la NBA, superando a Kareem Abdul-Jabbar?", opts:["Kobe Bryant","LeBron James","Karl Malone","Michael Jordan"], a:1},
+        {q:"¿Quién tenía el récord de puntos en la NBA antes de LeBron James?", opts:["Wilt Chamberlain","Kareem Abdul-Jabbar","Karl Malone","Michael Jordan"], a:1},
+        {q:"¿Cómo se llama la posición que normalmente organiza el juego y reparte asistencias?", opts:["Alero","Base","Escolta","Pívot"], a:1},
+        {q:"¿Cuántos puntos vale un tiro libre exitoso?", opts:["1","2","3","0"], a:0},
+        {q:"¿Qué país ganó el oro en baloncesto masculino en Tokio 2020?", opts:["España","Francia","Estados Unidos","Australia"], a:2},
+        {q:"¿Qué equipo de la NBA representa a la ciudad de Chicago?", opts:["Bulls","Bucks","Pistons","Pacers"], a:0},
+        {q:"¿Qué equipo de la NBA representa a Miami?", opts:["Magic","Heat","Hawks","Suns"], a:1},
+        {q:"¿Cuántas faltas personales sacan a un jugador del partido en la NBA?", opts:["5","6","4","7"], a:1},
+        {q:"¿Qué jugador serbio ganó varios MVP jugando de pívot para los Denver Nuggets?", opts:["Nikola Jokić","Bojan Bogdanović","Nemanja Bjelica","Vlade Divac"], a:0},
+        {q:"¿Cómo se llama el torneo universitario de baloncesto en EE. UU. disputado cada marzo?", opts:["March Madness","College Cup","Final Four","NCAA Bowl"], a:0},
+        {q:"¿Qué equipo ganó el título de la NBA en 2016 remontando un 3-1 en la final?", opts:["Golden State Warriors","Cleveland Cavaliers","San Antonio Spurs","Oklahoma City Thunder"], a:1},
+        {q:"¿Qué jugador es conocido por su tiro en suspensión y apodado \"Black Mamba\"?", opts:["Kobe Bryant","Tracy McGrady","Vince Carter","Allen Iverson"], a:0},
+        {q:"¿Cómo se llama la posición que juega generalmente el jugador más alto del equipo?", opts:["Base","Escolta","Alero","Pívot"], a:3},
+        {q:"¿Qué jugador esloveno destaca como estrella joven de Dallas Mavericks?", opts:["Luka Dončić","Domantas Sabonis","Kristaps Porziņģis","Danilo Gallinari"], a:0}
+      ]},
+      boxeo: { label:"Boxeo", emoji:"🥊", questions: [
+        {q:"¿Cuántos rounds tiene tradicionalmente una pelea de título mundial de boxeo profesional?", opts:["10","12","15","8"], a:1},
+        {q:"¿Cuánto dura cada round en el boxeo profesional?", opts:["2 minutos","3 minutos","4 minutos","5 minutos"], a:1},
+        {q:"¿Cómo se le llama al triunfo por incapacidad del rival para continuar?", opts:["Decisión","Nocaut (KO)","Descalificación","Empate técnico"], a:1},
+        {q:"¿Qué boxeador es conocido como \"The Greatest\"?", opts:["Joe Frazier","George Foreman","Muhammad Ali","Sonny Liston"], a:2},
+        {q:"¿Cuál era el nombre original de Muhammad Ali?", opts:["Cassius Clay","Floyd Patterson","Joe Louis","Sugar Ray Robinson"], a:0},
+        {q:"¿Qué boxeador mexicano es apodado \"Canelo\"?", opts:["Julio César Chávez","Saúl Álvarez","Juan Manuel Márquez","Marco Antonio Barrera"], a:1},
+        {q:"¿Cómo se llama el elemento que protege los puños del boxeador?", opts:["Vendas","Protector bucal","Guantes de boxeo","Casco"], a:2},
+        {q:"¿Qué boxeador filipino es leyenda en múltiples divisiones y también político?", opts:["Manny Pacquiao","Nonito Donaire","Gerry Peñalosa","Z Gorres"], a:0},
+        {q:"¿Qué boxeador fue apodado \"Iron Mike\"?", opts:["Evander Holyfield","Mike Tyson","Lennox Lewis","Riddick Bowe"], a:1},
+        {q:"¿A qué edad se convirtió Mike Tyson en el campeón mundial de peso pesado más joven de la historia?", opts:["18","20","22","24"], a:1},
+        {q:"¿Qué boxeador estadounidense se retiró invicto con récord perfecto de 49-0?", opts:["Rocky Marciano","Larry Holmes","Joe Frazier","Ken Norton"], a:0},
+        {q:"¿Cómo se llama el ring donde se disputa una pelea de boxeo?", opts:["Octágono","Cuadrilátero","Arena","Coliseo"], a:1},
+        {q:"¿Qué boxeador estadounidense es conocido por el apodo \"Money\"?", opts:["Floyd Mayweather Jr.","Oscar De La Hoya","Roy Jones Jr.","Bernard Hopkins"], a:0},
+        {q:"¿Cómo se llama la categoría de peso más alta en el boxeo, sin límite máximo?", opts:["Peso pesado","Peso pluma","Peso welter","Peso mosca"], a:0},
+        {q:"¿Cuál de estas es una organización que otorga cinturones mundiales de boxeo?", opts:["FIFA","WBC","UEFA","NBA"], a:1},
+        {q:"¿Bajo qué nombre ganó Muhammad Ali la medalla de oro olímpica en 1960?", opts:["Cassius Clay","Muhammad Ali","Joe Louis","Sugar Ray"], a:0},
+        {q:"¿Cómo se llama el golpe recto lanzado con la mano trasera?", opts:["Jab","Gancho","Cruzado","Uppercut"], a:2},
+        {q:"¿Qué boxeador argentino ostentó el título mundial de peso mediano durante casi 7 años en los años 70?", opts:["Carlos Monzón","Víctor Galíndez","Pascual Pérez","Nicolino Locche"], a:0},
+        {q:"¿Cómo se llama la persona que dirige y aconseja al boxeador desde su esquina?", opts:["Réferi","Entrenador o esquinero","Promotor","Juez"], a:1},
+        {q:"¿Qué boxeador retó a Ali en la pelea \"Rumble in the Jungle\"?", opts:["Joe Frazier","George Foreman","Ken Norton","Jerry Quarry"], a:1},
+        {q:"¿En qué país se celebró la pelea \"Rumble in the Jungle\" en 1974?", opts:["Sudáfrica","Egipto","Zaire","Kenia"], a:2},
+        {q:"¿Cómo se llama la pelea histórica entre Ali y Joe Frazier en Manila en 1975?", opts:["Thrilla in Manila","The Fight of the Century","Rumble in Manila","Battle of the Titans"], a:0},
+        {q:"¿Qué boxeador se retiró invicto con récord de 50-0?", opts:["Floyd Mayweather Jr.","Andre Ward","Terence Crawford","Errol Spence Jr."], a:0},
+        {q:"¿Cómo se llama el golpe corto y ascendente lanzado hacia arriba?", opts:["Jab","Cruzado","Gancho","Uppercut"], a:3},
+        {q:"¿Qué boxeadora irlandesa es pionera y estrella del boxeo femenino moderno?", opts:["Katie Taylor","Claressa Shields","Amanda Serrano","Cecilia Brækhus"], a:0},
+        {q:"¿Cómo se le llama al boxeador que pierde sin ser noqueado, según el veredicto de los jueces?", opts:["Derrota técnica","Derrota por decisión","Descalificación","Empate"], a:1},
+        {q:"¿Qué peleador ucraniano se convirtió en campeón indiscutido de peso pesado en la era moderna?", opts:["Vitali Klitschko","Wladimir Klitschko","Oleksandr Usyk","Vasyl Lomachenko"], a:2},
+        {q:"¿Cómo se llama la posición defensiva básica de un boxeador?", opts:["Guardia","Estocada","Postura","Base"], a:0},
+        {q:"¿Qué boxeador mexicano es considerado uno de los más grandes de la historia, con una larga racha invicta al inicio de su carrera?", opts:["Julio César Chávez","Erik Morales","Marco Antonio Barrera","Juan Manuel Márquez"], a:0},
+        {q:"¿Cuántos jueces determinan típicamente el resultado de una pelea a los puntos?", opts:["1","2","3","5"], a:2},
+        {q:"¿Qué boxeador noqueó a Sonny Liston para ganar el título mundial en 1964?", opts:["Cassius Clay","Floyd Patterson","Joe Frazier","Ernie Terrell"], a:0},
+        {q:"¿Cómo se llama el vendaje que protege las manos debajo de los guantes?", opts:["Vendas","Fajas","Muñequeras","Correas"], a:0},
+        {q:"¿A qué categoría de peso pertenece un boxeador de alrededor de 61.2 kg (135 lb)?", opts:["Peso pesado","Peso ligero","Peso pluma","Peso wélter"], a:1},
+        {q:"¿Cómo se llama la pausa de un minuto entre cada round de una pelea?", opts:["Receso","Intermedio","Descanso","Tiempo fuera"], a:2},
+        {q:"¿Qué boxeador kazajo es apodado \"GGG\"?", opts:["Gennady Golovkin","Vasiliy Lomachenko","Sergey Kovalev","Beibut Shumenov"], a:0},
+        {q:"¿Qué país tiene una gran tradición boxística, cuna de Julio César Chávez y Canelo Álvarez?", opts:["México","Cuba","Puerto Rico","Panamá"], a:0},
+        {q:"¿Cómo se llama la técnica de esquivar golpes moviendo la cabeza y el torso?", opts:["Bloqueo","Esquive (slip)","Clinch","Cobertura"], a:1},
+        {q:"¿Qué boxeador perdió su invicto ante Buster Douglas en un famoso upset de 1990?", opts:["Mike Tyson","Evander Holyfield","Larry Holmes","Riddick Bowe"], a:0},
+        {q:"¿Cómo se llama el objeto que porta el campeón mundial como símbolo de su título?", opts:["Medalla","Trofeo","Cinturón","Corona"], a:2}
+      ]},
+      wwe: { label:"WWE", emoji:"🤼", questions: [
+        {q:"¿Cómo se llama el evento más importante de WWE, celebrado cada primavera?", opts:["SummerSlam","WrestleMania","Royal Rumble","Survivor Series"], a:1},
+        {q:"¿Qué actor y luchador es conocido como \"The Rock\"?", opts:["Dwayne Johnson","John Cena","Dave Bautista","Triple H"], a:0},
+        {q:"¿Qué luchador es conocido por la frase \"Yes! Yes! Yes!\"?", opts:["Kofi Kingston","Daniel Bryan","AJ Styles","Seth Rollins"], a:1},
+        {q:"¿Cómo se llama el movimiento finalizador icónico de Stone Cold Steve Austin?", opts:["RKO","Stunner","Spear","Powerbomb"], a:1},
+        {q:"¿Qué luchador es conocido como \"Stone Cold\"?", opts:["Steve Austin","Kane","The Undertaker","Big Show"], a:0},
+        {q:"¿Qué luchadora es apodada \"The Man\"?", opts:["Charlotte Flair","Becky Lynch","Sasha Banks","Bayley"], a:1},
+        {q:"¿Quién es reconocido como el arquitecto de la WWE moderna?", opts:["Vince McMahon","Eric Bischoff","Paul Heyman","Jim Ross"], a:0},
+        {q:"¿Cómo se llama el evento anual donde 30 luchadores compiten hasta que quede uno?", opts:["Elimination Chamber","Royal Rumble","Money in the Bank","Survivor Series"], a:1},
+        {q:"¿Cuántos participantes compiten tradicionalmente en el Royal Rumble masculino?", opts:["20","25","30","40"], a:2},
+        {q:"¿Qué luchador es conocido por el movimiento \"Attitude Adjustment\"?", opts:["Randy Orton","John Cena","Batista","Big Show"], a:1},
+        {q:"¿Qué luchadora es apodada \"The Queen\"?", opts:["Becky Lynch","Charlotte Flair","Alexa Bliss","Bianca Belair"], a:1},
+        {q:"¿Cuál es el nombre real del luchador \"Rey Mysterio\"?", opts:["Óscar Gutiérrez","Eddie Guerrero","Alberto del Río","Sin Cara"], a:0},
+        {q:"¿Cómo se llama uno de los movimientos icónicos de The Rock, un golpe de codo saltando sobre el rival?", opts:["Rock Bottom","People's Elbow","Sharpshooter","Spinebuster"], a:1},
+        {q:"¿Cuál es el nombre real de Roman Reigns?", opts:["Leati Joseph Anoa'i","Joe Anoa'i","Dwayne Johnson","Yokozuna"], a:0},
+        {q:"¿Qué luchador es apodado \"The Big Dog\"?", opts:["Roman Reigns","Brock Lesnar","Seth Rollins","Drew McIntyre"], a:0},
+        {q:"¿Cómo se llama el evento de WWE celebrado en verano que da nombre a su cartel principal?", opts:["SummerSlam","WrestleMania","Backlash","Fastlane"], a:0},
+        {q:"¿Cuál es el nombre real del luchador conocido como \"The Big Show\"?", opts:["Paul Wight","Mark Henry","Kevin Nash","Big Van Vader"], a:0},
+        {q:"¿Cuál es el nombre real del luchador \"Kane\"?", opts:["Glenn Jacobs","Mark Calaway","Mick Foley","Bray Wyatt"], a:0},
+        {q:"¿Qué marca semanal se separó históricamente de Raw para crear un segundo show?", opts:["NXT","SmackDown","ECW","Velocity"], a:1},
+        {q:"¿Qué luchadora ganó el primer Royal Rumble femenino en 2018?", opts:["Asuka","Nia Jax","Charlotte Flair","Becky Lynch"], a:0},
+        {q:"¿Cómo se llama el maletín que se disputa en el evento Money in the Bank?", opts:["Maletín dorado","Cinturón de campeón","Trofeo de la escalera","Maletín de Money in the Bank"], a:3},
+        {q:"¿Qué luchador es apodado \"The Nature Boy\" y famoso por la llave Figure Four?", opts:["Ric Flair","Randy Savage","Harley Race","Dusty Rhodes"], a:0},
+        {q:"¿Cómo se llama el programa semanal insignia de WWE transmitido los lunes?", opts:["SmackDown","Monday Night Raw","NXT","Main Event"], a:1},
+        {q:"¿Cómo se llama el movimiento finalizador característico de Randy Orton?", opts:["RKO","Stunner","Tombstone","Curb Stomp"], a:0},
+        {q:"¿Cuál es el nombre real del luchador francés conocido como \"André the Giant\"?", opts:["André René Roussimoff","Big Van Vader","Yokozuna","Giant Gonzalez"], a:0},
+        {q:"¿Cómo se llama la llave de sumisión icónica de Bret Hart, un candado en la pierna?", opts:["Sharpshooter","Figure Four","Ankle Lock","Boston Crab"], a:0},
+        {q:"¿Qué luchador canadiense es apodado \"The Hitman\"?", opts:["Bret Hart","Chris Jericho","Edge","Kevin Owens"], a:0},
+        {q:"¿En qué mes del año se celebra tradicionalmente WrestleMania?", opts:["Enero","Abril","Julio","Octubre"], a:1},
+        {q:"¿Qué luchador es conocido por su icónico gesto de \"You can't see me\" antes de sus combates?", opts:["Randy Orton","John Cena","The Miz","Batista"], a:1},
+        {q:"¿Cómo se llama el evento de WWE donde varios luchadores se encierran en una estructura metálica esférica?", opts:["Hell in a Cell","Elimination Chamber","Money in the Bank","War Games"], a:1},
+        {q:"¿Cuántos años se mantuvo invicto The Undertaker en WrestleMania antes de perder ante Brock Lesnar en 2014?", opts:["15","18","21","25"], a:2},
+        {q:"¿Cuál es el nombre real de The Undertaker?", opts:["Mark Calaway","Glenn Jacobs","Kevin Nash","Big Van Vader"], a:0},
+        {q:"¿Qué luchador es apodado \"The Heartbreak Kid\"?", opts:["Shawn Michaels","Triple H","Chris Jericho","Edge"], a:0},
+        {q:"¿Cómo se llama el evento con estructura de jaula estrenado en los años 90, disputado en octubre?", opts:["Hell in a Cell","Judgment Day","No Mercy","Vengeance"], a:0},
+        {q:"¿Qué luchador estadounidense-samoano es conocido por liderar \"The Bloodline\" en los años 2020?", opts:["Roman Reigns","Jey Uso","Sami Zayn","Solo Sikoa"], a:0},
+        {q:"¿Cómo se llama el título máximo femenino de Raw en la era moderna?", opts:["Campeonato Femenino de Raw","Campeonato Intercontinental","Campeonato de Parejas","Campeonato de EE. UU."], a:0},
+        {q:"¿Qué luchador es apodado \"The Viper\"?", opts:["Randy Orton","Edge","Christian","Rob Van Dam"], a:0},
+        {q:"¿Qué evento de WWE es conocido por otorgar un contrato de oportunidad titular a quien baje el maletín?", opts:["Money in the Bank","Royal Rumble","King of the Ring","Elimination Chamber"], a:0},
+        {q:"¿Qué torneo anual corona a \"El Rey del Ring\"?", opts:["King of the Ring","Royal Rumble","Beat the Clock","Fatal 4-Way"], a:0}
+      ]}
+    }
+  },
+  cultura: {
+    label:"Cultura General", emoji:"🧠", css:"cat-cultura", color:"var(--cultura)",
+    subcategories: { general: { label:"Cultura General", emoji:"🧠", questions: [
+      {q:"¿Cuál es el planeta más grande del sistema solar?", opts:["Saturno","Júpiter","Neptuno","Urano"], a:1},
+      {q:"¿Cuál es la capital de Australia?", opts:["Sídney","Melbourne","Canberra","Perth"], a:2},
+      {q:"¿Quién pintó la Mona Lisa?", opts:["Miguel Ángel","Rafael","Leonardo da Vinci","Botticelli"], a:2},
+      {q:"¿Cuál es el río más largo del mundo?", opts:["Amazonas","Nilo","Misisipi","Yangtsé"], a:1},
+      {q:"¿En qué año llegó el ser humano a la Luna por primera vez?", opts:["1965","1969","1972","1958"], a:1},
+      {q:"¿Cuántos huesos tiene el cuerpo humano adulto?", opts:["186","206","226","246"], a:1},
+      {q:"¿Cuál es el idioma con más hablantes nativos en el mundo?", opts:["Inglés","Español","Chino mandarín","Hindi"], a:2},
+      {q:"¿Qué elemento químico tiene el símbolo \"O\"?", opts:["Oro","Osmio","Oxígeno","Ozono"], a:2},
+      {q:"¿Cuál es el océano más grande del mundo?", opts:["Atlántico","Índico","Ártico","Pacífico"], a:3},
+      {q:"¿Quién escribió \"Don Quijote de la Mancha\"?", opts:["Lope de Vega","Miguel de Cervantes","Federico García Lorca","Gabriel García Márquez"], a:1},
+      {q:"¿Cuál es el metal más abundante en la corteza terrestre?", opts:["Hierro","Aluminio","Cobre","Plomo"], a:1},
+      {q:"¿Cuál es el hueso más largo del cuerpo humano?", opts:["Húmero","Tibia","Fémur","Radio"], a:2},
+      {q:"¿Cuál es la moneda oficial de Japón?", opts:["Yuan","Won","Yen","Baht"], a:2},
+      {q:"¿Cuál es el continente más grande del mundo?", opts:["África","Asia","América","Europa"], a:1},
+      {q:"¿Cuál es el continente considerado más pequeño del mundo?", opts:["Oceanía","Europa","Antártida","América del Sur"], a:0},
+      {q:"¿Cuál es el desierto cálido más grande del mundo?", opts:["Gobi","Kalahari","Sahara","Atacama"], a:2},
+      {q:"¿Cuál es la montaña más alta del mundo?", opts:["K2","Everest","Kilimanjaro","Aconcagua"], a:1},
+      {q:"¿En qué país se encuentra la Torre Eiffel?", opts:["Italia","España","Francia","Bélgica"], a:2},
+      {q:"¿En qué país se encuentran las Pirámides de Guiza?", opts:["Egipto","México","Sudán","Perú"], a:0},
+      {q:"¿Qué metal es líquido a temperatura ambiente?", opts:["Hierro","Mercurio","Plomo","Zinc"], a:1},
+      {q:"¿Cuántos colores tiene tradicionalmente el arcoíris?", opts:["5","6","7","8"], a:2},
+      {q:"¿Qué gas necesitan respirar los seres humanos para vivir?", opts:["Nitrógeno","Oxígeno","Dióxido de carbono","Hidrógeno"], a:1},
+      {q:"¿Cuál es la capital de Francia?", opts:["Lyon","Marsella","París","Niza"], a:2},
+      {q:"¿Cuál es la capital de Japón?", opts:["Osaka","Kioto","Tokio","Yokohama"], a:2},
+      {q:"¿Cuál es la capital de Italia?", opts:["Milán","Roma","Nápoles","Venecia"], a:1},
+      {q:"¿Cuál es la capital de Canadá?", opts:["Toronto","Vancouver","Ottawa","Montreal"], a:2},
+      {q:"¿Cuál es la capital de Egipto?", opts:["Alejandría","El Cairo","Luxor","Guiza"], a:1},
+      {q:"¿Quién formuló la teoría de la relatividad?", opts:["Isaac Newton","Albert Einstein","Niels Bohr","Galileo Galilei"], a:1},
+      {q:"¿Quién es considerado el padre de la teoría de la evolución?", opts:["Charles Darwin","Gregor Mendel","Louis Pasteur","Carl Linneo"], a:0},
+      {q:"¿Cuál es el órgano más grande del cuerpo humano?", opts:["Hígado","Cerebro","Piel","Pulmones"], a:2},
+      {q:"¿Cuántas cámaras tiene el corazón humano?", opts:["2","3","4","5"], a:2},
+      {q:"¿Cuál es el animal terrestre más grande del mundo?", opts:["Rinoceronte","Elefante africano","Hipopótamo","Jirafa"], a:1},
+      {q:"¿Cuál es el animal terrestre más rápido del mundo?", opts:["León","Guepardo","Antílope","Caballo"], a:1},
+      {q:"¿Cuál es el mamífero más grande del mundo?", opts:["Elefante africano","Ballena azul","Tiburón blanco","Cachalote"], a:1},
+      {q:"¿Cuántos lados tiene un hexágono?", opts:["5","6","7","8"], a:1},
+      {q:"¿Cuál es el idioma oficial de Brasil?", opts:["Español","Portugués","Francés","Italiano"], a:1},
+      {q:"¿Cuál es la moneda oficial de Estados Unidos?", opts:["Euro","Libra","Dólar","Peso"], a:2},
+      {q:"¿Quién escribió \"Cien años de soledad\"?", opts:["Mario Vargas Llosa","Gabriel García Márquez","Jorge Luis Borges","Pablo Neruda"], a:1},
+      {q:"¿Cómo se llama el volcán italiano famoso por sepultar Pompeya?", opts:["Etna","Vesubio","Estrómboli","Stromboli"], a:1},
+      {q:"¿Cuál es la capital de España?", opts:["Barcelona","Sevilla","Madrid","Valencia"], a:2}
+    ]}}
+  },
+  peliculas: {
+    label:"Películas", emoji:"🎬", css:"cat-peliculas", color:"var(--peliculas)",
+    subcategories: { general: { label:"Películas", emoji:"🎬", questions: [
+      {q:"¿Cuál es el nombre real de Iron Man?", opts:["Steve Rogers","Tony Stark","Bruce Banner","Peter Parker"], a:1},
+      {q:"¿Quién es el archienemigo clásico de Batman?", opts:["Lex Luthor","Venom","Joker","Bane"], a:2},
+      {q:"¿De qué planeta proviene Superman?", opts:["Marte","Krypton","Tamaran","Oa"], a:1},
+      {q:"¿Cómo se llama el martillo de Thor?", opts:["Gungnir","Stormbreaker","Mjolnir","Gram"], a:2},
+      {q:"¿Quién dirigió la película original de Star Wars: Episodio IV?", opts:["Steven Spielberg","George Lucas","James Cameron","Ridley Scott"], a:1},
+      {q:"¿Cuál es la identidad civil de Spider-Man?", opts:["Peter Parker","Miles Morales","Harry Osborn","Eddie Brock"], a:0},
+      {q:"¿Qué villano de Marvel busca reunir las Gemas del Infinito?", opts:["Ultron","Loki","Thanos","Red Skull"], a:2},
+      {q:"¿En qué ciudad ficticia vive Batman?", opts:["Metrópolis","Star City","Central City","Gotham"], a:3},
+      {q:"¿Cómo se llama la nave de los Guardianes de la Galaxia?", opts:["Milano","Benatar","Halcón Milenario","Serenity"], a:0},
+      {q:"¿Quién interpretó al Joker en la película \"Joker\" de 2019?", opts:["Jared Leto","Heath Ledger","Joaquin Phoenix","Jack Nicholson"], a:2},
+      {q:"¿Quién interpreta a Wolverine en las películas de X-Men?", opts:["Hugh Jackman","Patrick Stewart","Ian McKellen","Ryan Reynolds"], a:0},
+      {q:"¿Cómo se llama la organización de superhéroes liderada por Nick Fury en el Universo Marvel?", opts:["S.H.I.E.L.D.","H.Y.D.R.A.","A.I.M.","S.W.O.R.D."], a:0},
+      {q:"¿Qué superhéroe de DC es conocido como \"El Hombre de Acero\"?", opts:["Batman","Flash","Superman","Green Lantern"], a:2},
+      {q:"¿Cómo se llama el planeta natal de Thor?", opts:["Asgard","Midgard","Vanaheim","Jotunheim"], a:0},
+      {q:"¿Quién interpretó a Batman en \"The Dark Knight\" de 2008?", opts:["George Clooney","Christian Bale","Val Kilmer","Michael Keaton"], a:1},
+      {q:"¿Qué actor interpretó al Joker en \"The Dark Knight\" de 2008?", opts:["Heath Ledger","Jared Leto","Joaquin Phoenix","Cesar Romero"], a:0},
+      {q:"¿Cómo se llama el mayordomo de Bruce Wayne?", opts:["Alfred Pennyworth","Lucius Fox","James Gordon","Dick Grayson"], a:0},
+      {q:"¿Quién es reconocido como uno de los creadores de Iron Man en los cómics?", opts:["Stan Lee","Bob Kane","Jerry Siegel","Todd McFarlane"], a:0},
+      {q:"¿Cómo se llama la hermana adoptiva de Thor, villana en \"Thor: Ragnarok\"?", opts:["Hela","Sif","Enchantress","Angela"], a:0},
+      {q:"¿Qué actriz interpretó a la Viuda Negra en el Universo Cinematográfico Marvel?", opts:["Elizabeth Olsen","Scarlett Johansson","Brie Larson","Zoe Saldaña"], a:1},
+      {q:"¿Cómo se abrevia el Universo Cinematográfico Marvel?", opts:["MCU","DCU","MFU","CGI"], a:0},
+      {q:"¿Qué superhéroe de DC es conocido como \"El Hombre Murciélago\"?", opts:["Batman","Nightwing","Robin","Red Hood"], a:0},
+      {q:"¿Cómo se llama la ciudad ficticia donde vive Superman?", opts:["Gotham","Metrópolis","Central City","Star City"], a:1},
+      {q:"¿Quién interpretó a Wonder Woman en las películas de DC de finales de los 2010?", opts:["Gal Gadot","Margot Robbie","Brie Larson","Charlize Theron"], a:0},
+      {q:"¿Cómo se llama el escudo que usa el Capitán América como arma?", opts:["Escudo de vibranium","Espada de adamantium","Martillo de asgardiano","Lanza de energía"], a:0},
+      {q:"¿Qué villano de Batman es un excéntrico criminal obsesionado con acertijos?", opts:["Enigma","Dos Caras","Pingüino","Espantapájaros"], a:0},
+      {q:"¿Quién interpretó al Capitán América en el Universo Cinematográfico Marvel?", opts:["Chris Evans","Chris Hemsworth","Chris Pratt","Chris Pine"], a:0},
+      {q:"¿Cómo se llama el grupo de superhéroes formado por Iron Man, Thor, Hulk y el Capitán América?", opts:["La Liga de la Justicia","Los Vengadores","Los X-Men","Los Guardianes"], a:1},
+      {q:"¿Qué actor interpretó a Thor en el Universo Cinematográfico Marvel?", opts:["Liam Hemsworth","Chris Hemsworth","Alexander Skarsgård","Sam Worthington"], a:1},
+      {q:"¿Cómo se llama la gema del infinito que controla la realidad?", opts:["Gema del Alma","Gema del Tiempo","Gema de la Realidad","Gema del Poder"], a:2},
+      {q:"¿Quién interpretó a Bruce Banner en las últimas películas del Universo Marvel?", opts:["Edward Norton","Mark Ruffalo","Eric Bana","Lou Ferrigno"], a:1},
+      {q:"¿Cómo se llama el arma tridente que usa Aquaman?", opts:["Tridente","Lanza","Espada","Arpón"], a:0},
+      {q:"¿Qué villano de Superman es un científico calvo obsesionado con destruirlo?", opts:["Lex Luthor","Brainiac","Doomsday","Zod"], a:0},
+      {q:"¿Quién dirigió la película \"Titanic\" de 1997?", opts:["Steven Spielberg","James Cameron","Ridley Scott","Peter Jackson"], a:1},
+      {q:"¿Qué película animada de Pixar trata sobre juguetes que cobran vida?", opts:["Cars","Toy Story","Buscando a Nemo","Up"], a:1},
+      {q:"¿Quién interpretó a Deadpool en las películas?", opts:["Ryan Reynolds","Hugh Jackman","Ryan Gosling","Chris Pratt"], a:0},
+      {q:"¿Cómo se llama la mentora de Doctor Strange en las artes místicas?", opts:["La Anciana (The Ancient One)","Wanda Maximoff","Agatha Harkness","Clea"], a:0},
+      {q:"¿Qué villano de Spider-Man es un excientífico con tentáculos mecánicos?", opts:["Duende Verde","Doctor Octopus","Buitre","Electro"], a:1},
+      {q:"¿Qué saga de películas trata sobre un anillo que debe ser destruido en la Tierra Media?", opts:["Harry Potter","El Señor de los Anillos","Las Crónicas de Narnia","Eragon"], a:1}
+    ]}}
+  },
+  redes: {
+    label:"Redes Sociales", emoji:"📱", css:"cat-redes", color:"var(--redes)",
+    subcategories: { general: { label:"Redes Sociales", emoji:"📱", questions: [
+      {q:"¿Qué red social usaba un pajarito azul como logo antes de renombrarse a X?", opts:["Twitter","Threads","Mastodon","Bluesky"], a:0},
+      {q:"¿En qué año se fundó Facebook?", opts:["2002","2004","2006","2008"], a:1},
+      {q:"¿Cómo se llama la función de publicaciones que desaparecen a las 24 horas?", opts:["Reels","Historias","Momentos","Fleets"], a:1},
+      {q:"¿Qué app es famosa por sus videos cortos y retos de baile?", opts:["TikTok","LinkedIn","Pinterest","Snapchat"], a:0},
+      {q:"¿Quién fundó Facebook?", opts:["Jack Dorsey","Evan Spiegel","Mark Zuckerberg","Kevin Systrom"], a:2},
+      {q:"¿Qué red social, propiedad de Meta, se centra en compartir fotos?", opts:["Instagram","Pinterest","Snapchat","Flickr"], a:0},
+      {q:"¿Cómo se llama el símbolo \"#\" usado para categorizar publicaciones?", opts:["Arroba","Hashtag","Emoji","Trending"], a:1},
+      {q:"¿Qué app de mensajería, además de Instagram, también es propiedad de Meta?", opts:["Telegram","Signal","WhatsApp","WeChat"], a:2},
+      {q:"¿Cuál fue una popular red social de los 2000 con perfiles personalizables y música?", opts:["MySpace","Orkut","Hi5","Friendster"], a:0},
+      {q:"¿Qué plataforma, propiedad de Amazon, es conocida por transmisiones en vivo de videojuegos?", opts:["Twitch","Discord","Kick","YouTube Gaming"], a:0},
+      {q:"¿Qué red social se especializa en compartir currículums y contenido laboral?", opts:["LinkedIn","Indeed","Glassdoor","Monster"], a:0},
+      {q:"¿Qué red social permite guardar \"pines\" o tableros de imágenes e ideas?", opts:["Pinterest","Tumblr","Behance","Dribbble"], a:0},
+      {q:"¿Qué app de mensajería es conocida por sus mensajes que se autodestruyen tras verse?", opts:["Snapchat","Telegram","Signal","WhatsApp"], a:0},
+      {q:"¿Qué red social china es la versión internacional de Douyin?", opts:["TikTok","WeChat","Weibo","Bilibili"], a:0},
+      {q:"¿Qué red social se organiza en foros y comunidades temáticas llamadas \"subreddits\"?", opts:["Reddit","Quora","Discord","4chan"], a:0},
+      {q:"¿Cómo se llama la función de Instagram para videos cortos, similar a TikTok?", opts:["Stories","Reels","IGTV","Live"], a:1},
+      {q:"¿Qué red social permitía originalmente mensajes de solo 140 caracteres?", opts:["Facebook","Twitter (X)","Instagram","LinkedIn"], a:1},
+      {q:"¿Quién es uno de los cofundadores de Twitter?", opts:["Jack Dorsey","Larry Page","Sergey Brin","Elon Musk"], a:0},
+      {q:"¿En qué año se lanzó Instagram?", opts:["2008","2010","2012","2014"], a:1},
+      {q:"¿Quién es uno de los cofundadores de Instagram?", opts:["Kevin Systrom","Travis Kalanick","Brian Chesky","Jan Koum"], a:0},
+      {q:"¿En qué año fue adquirida WhatsApp por Facebook?", opts:["2012","2014","2016","2018"], a:1},
+      {q:"¿Cómo se llama el clásico ícono de \"me gusta\" de Facebook?", opts:["Corazón","Pulgar arriba","Estrella","Carita feliz"], a:1},
+      {q:"¿Qué plataforma de video, propiedad de Google, permite subir y compartir videos?", opts:["Vimeo","YouTube","Dailymotion","TikTok"], a:1},
+      {q:"¿En qué año fue fundado YouTube?", opts:["2003","2005","2007","2009"], a:1},
+      {q:"¿Qué app de mensajería, basada en canales y servidores, es popular en comunidades de videojuegos?", opts:["Discord","Slack","Telegram","WhatsApp"], a:0},
+      {q:"¿A qué nombre renombró Facebook a su empresa matriz en 2021?", opts:["Meta","Nova","Horizon","Alpha"], a:0},
+      {q:"¿A cuántos caracteres se amplió el límite de Twitter, tras haber sido de 140?", opts:["200","240","280","320"], a:2},
+      {q:"¿Cómo se llama la sección de contenido recomendado y aleatorio en TikTok?", opts:["Explorar","Para Ti","Siguiendo","Descubrir"], a:1},
+      {q:"¿Qué red social introdujo la función de enviar \"pokes\" (toques) entre usuarios?", opts:["Facebook","Twitter","MySpace","LinkedIn"], a:0},
+      {q:"¿Qué app de citas es conocida por el gesto de deslizar a la derecha para dar \"like\"?", opts:["Tinder","Bumble","Hinge","OkCupid"], a:0},
+      {q:"¿Cómo se llama la función para transmitir video en vivo dentro de Instagram?", opts:["Instagram Live","Instagram Cast","Instagram Stream","Instagram Beam"], a:0},
+      {q:"¿En qué año fue adquirida Twitch por Amazon?", opts:["2012","2014","2016","2018"], a:1},
+      {q:"¿Qué significan las siglas \"DM\" en redes sociales?", opts:["Mensaje directo","Modo de descarga","Mensaje demorado","Datos masivos"], a:0},
+      {q:"¿Cómo se llama la insignia que verifica cuentas oficiales o notables en redes sociales?", opts:["Verificación (check azul)","Sello dorado","Ícono premium","Etiqueta VIP"], a:0},
+      {q:"¿Qué red social lanzó \"Threads\" como competidor de Twitter/X en 2023?", opts:["Instagram (Meta)","TikTok","Snapchat","LinkedIn"], a:0},
+      {q:"¿Qué término describe un contenido que se vuelve extremadamente popular y se comparte de forma masiva?", opts:["Trending","Viral","Boom","Explosivo"], a:1},
+      {q:"¿Cómo se le llama a una persona creadora de contenido con gran cantidad de seguidores en redes?", opts:["Influencer","Bloguero","Streamer","Youtuber"], a:0},
+      {q:"¿Qué reacción adicional al \"me gusta\" representa un corazón en Facebook?", opts:["Me encanta (Love)","Me asombra","Me divierte","Me importa"], a:0},
+      {q:"¿Qué red social rusa, similar a Facebook, es popular en países de Europa del Este?", opts:["VKontakte","Odnoklassniki","Yandex Zen","Telegram"], a:0},
+      {q:"¿Cómo se le llama cuando se elimina una publicación o se suspende una cuenta por infringir normas?", opts:["Baneo o suspensión","Archivo","Silencio","Bloqueo temporal"], a:0}
+    ]}}
+  }
+};
+
+const QUESTION_TIME = 15; // segundos por pregunta
+const COUNT_OPTIONS = [5,10,15,20,30];
+const AVATAR_COLORS = ["#8CFF6B","#FFC93C","#FF4FA3","#34D2FF","#B98CFF","#FF8C5B"];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function randCode(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s = "";
+  for(let i=0;i<5;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function uid(){
+  return 'p' + Math.random().toString(36).slice(2,10);
+}
+function colorFor(id){
+  let h = 0;
+  for(let i=0;i<id.length;i++) h = (h*31 + id.charCodeAt(i)) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[Math.abs(h)];
+}
+function initials(name){
+  return (name || "?").trim().slice(0,2).toUpperCase();
+}
+function pool(catKey, subKey){
+  return CATEGORIES[catKey].subcategories[subKey].questions;
+}
+function pointsForAnswer(correct, elapsedSeconds){
+  if(!correct) return 0;
+  const clamped = Math.max(0, Math.min(elapsedSeconds, QUESTION_TIME));
+  const speedRatio = 1 - (clamped/QUESTION_TIME);
+  return Math.round(500 + speedRatio*500);
+}
+
+/* ---------------------------------------------------------
+   Estado global
+--------------------------------------------------------- */
+const state = {
+  screen: 'home',
+  myId: uid(),
+  myName: '',
+  mode: null,
+  pendingCategory: null,
+  pendingSubKey: null,
+  // solo
+  soloCategory: null,
+  soloSubKey: null,
+  soloIdx: 0,
+  soloScore: 0,
+  soloStreak: 0,
+  soloAnswered: false,
+  soloQuestions: [],
+  soloQStart: null,
+  soloLastPoints: null,
+  // room
+  roomCode: null,
+  isHost: false,
+  roomMeta: null,
+  roomPlayers: [],
+  myAnswered: false,
+  pollTimer: null,
+  qStartLocal: null
+};
+
+const app = document.getElementById('app');
+
+function render(){
+  app.innerHTML = '';
+  const screens = {
+    home: renderHome,
+    soloCategory: renderSoloCategory,
+    soloSubcategory: ()=>renderSubcategoryScreen('solo'),
+    soloCount: ()=>renderCountScreen('solo'),
+    soloGame: renderSoloGame,
+    soloResults: renderSoloResults,
+    roomChoice: renderRoomChoice,
+    roomCreateCategory: renderRoomCreateCategory,
+    roomSubcategory: ()=>renderSubcategoryScreen('room'),
+    roomCount: ()=>renderCountScreen('room'),
+    roomJoin: renderRoomJoin,
+    roomLobby: renderRoomLobby,
+    roomGame: renderRoomGame,
+    roomResults: renderRoomResults
+  };
+  const fn = screens[state.screen] || renderHome;
+  fn();
+}
+
+function el(tag, cls, html){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(html !== undefined) e.innerHTML = html;
+  return e;
+}
+
+function goHome(){
+  stopPolling();
+  Object.assign(state, {
+    screen:'home', mode:null, pendingCategory:null, pendingSubKey:null,
+    soloCategory:null, soloSubKey:null, soloIdx:0, soloScore:0, soloStreak:0, soloAnswered:false,
+    soloQuestions:[], roomCode:null, isHost:false, roomMeta:null, roomPlayers:[], myAnswered:false
+  });
+  render();
+}
+
+/* ---------------------------------------------------------
+   HOME
+--------------------------------------------------------- */
+function renderHome(){
+  const wrap = el('div','screen');
+  wrap.appendChild(el('div','logo','🎮 Quiz Games'));
+  wrap.appendChild(el('div','tagline','Ponte a prueba solo o reta a tus amigos en vivo'));
+
+  const card = el('div','card');
+  const label = el('label','field-label','Tu nombre de jugador');
+  card.appendChild(label);
+  const input = el('input');
+  input.type='text';
+  input.placeholder='Ej. CraqueDelBarrio';
+  input.maxLength = 16;
+  input.value = state.myName;
+  input.addEventListener('input', e => state.myName = e.target.value);
+  card.appendChild(input);
+  wrap.appendChild(card);
+
+  const soloBtn = el('button','btn','🎯 Jugar solo');
+  soloBtn.addEventListener('click', ()=>{ state.screen='soloCategory'; render(); });
+  wrap.appendChild(soloBtn);
+
+  const roomBtn = el('button','btn secondary','🟢 Jugar con amigos online');
+  roomBtn.addEventListener('click', ()=>{
+    if(!state.myName.trim()){ shake(input); return; }
+    state.screen='roomChoice'; render();
+  });
+  wrap.appendChild(roomBtn);
+
+  const foot = el('footer','foot','Deportes (Fútbol · Béisbol · Baloncesto · Boxeo · WWE) · Cultura General · Películas · Redes Sociales');
+  app.appendChild(wrap);
+  app.appendChild(foot);
+}
+
+function shake(elm){
+  elm.style.borderColor = 'var(--danger)';
+  elm.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}], {duration:300});
+  setTimeout(()=> elm.style.borderColor = '', 800);
+}
+
+function categoryGrid(onPick){
+  const grid = el('div','cat-grid');
+  Object.entries(CATEGORIES).forEach(([key,cat])=>{
+    const c = el('div', 'cat-card '+cat.css);
+    c.appendChild(el('div','emoji',cat.emoji));
+    c.appendChild(el('div','',cat.label));
+    c.addEventListener('click', ()=> onPick(key));
+    grid.appendChild(c);
+  });
+  return grid;
+}
+
+function topBar(onBack){
+  const bar = el('div','topbar');
+  const b = el('button','back','← Salir');
+  b.addEventListener('click', onBack);
+  bar.appendChild(b);
+  bar.appendChild(el('div','pill',''));
+  return bar;
+}
+
+/* ---------------------------------------------------------
+   Flujo compartido: categoria -> subcategoria -> cantidad
+--------------------------------------------------------- */
+function pickCategory(mode, catKey){
+  state.mode = mode;
+  state.pendingCategory = catKey;
+  const subKeys = Object.keys(CATEGORIES[catKey].subcategories);
+  if(subKeys.length > 1){
+    state.screen = mode==='solo' ? 'soloSubcategory' : 'roomSubcategory';
+  } else {
+    state.pendingSubKey = subKeys[0];
+    state.screen = mode==='solo' ? 'soloCount' : 'roomCount';
+  }
+  render();
+}
+
+function renderSubcategoryScreen(mode){
+  const backScreen = mode==='solo' ? 'soloCategory' : 'roomCreateCategory';
+  app.appendChild(topBar(()=>{ state.screen=backScreen; render(); }));
+  const wrap = el('div','screen');
+  const cat = CATEGORIES[state.pendingCategory];
+  wrap.appendChild(el('h2','', cat.emoji+' Elige la disciplina'));
+  wrap.appendChild(el('div','muted','Categoría: '+cat.label));
+  const grid = el('div','cat-grid');
+  Object.entries(cat.subcategories).forEach(([subKey,sub])=>{
+    const c = el('div','cat-card '+cat.css);
+    c.appendChild(el('div','emoji',sub.emoji));
+    c.appendChild(el('div','',sub.label));
+    c.appendChild(el('div','muted', sub.questions.length+' preguntas'));
+    c.addEventListener('click', ()=>{
+      state.pendingSubKey = subKey;
+      state.screen = mode==='solo' ? 'soloCount' : 'roomCount';
+      render();
+    });
+    grid.appendChild(c);
+  });
+  wrap.appendChild(grid);
+  app.appendChild(wrap);
+}
+
+function renderCountScreen(mode){
+  const cat = CATEGORIES[state.pendingCategory];
+  const sub = cat.subcategories[state.pendingSubKey];
+  const subKeys = Object.keys(cat.subcategories);
+  const backScreen = mode==='solo'
+    ? (subKeys.length>1 ? 'soloSubcategory' : 'soloCategory')
+    : (subKeys.length>1 ? 'roomSubcategory' : 'roomCreateCategory');
+  app.appendChild(topBar(()=>{ state.screen=backScreen; render(); }));
+  const wrap = el('div','screen');
+  wrap.appendChild(el('h2','','¿Cuántas preguntas?'));
+  const pillWrap = el('div','pill', sub.emoji+' '+sub.label);
+  pillWrap.style.background='rgba(255,255,255,0.08)';
+  pillWrap.style.color=cat.color;
+  pillWrap.style.alignSelf='flex-start';
+  wrap.appendChild(pillWrap);
+  wrap.appendChild(el('div','muted','Elige el largo de la partida ('+sub.questions.length+' preguntas disponibles en el banco)'));
+
+  const grid = el('div','count-grid');
+  const opts = COUNT_OPTIONS.filter(n => n <= sub.questions.length);
+  opts.forEach(n=>{
+    const c = el('div','count-card', n + '<span class="sub">preguntas</span>');
+    c.addEventListener('click', ()=> confirmCount(mode, n));
+    grid.appendChild(c);
+  });
+  const allCard = el('div','count-card', sub.questions.length + '<span class="sub">todas</span>');
+  allCard.addEventListener('click', ()=> confirmCount(mode, sub.questions.length));
+  grid.appendChild(allCard);
+  wrap.appendChild(grid);
+  app.appendChild(wrap);
+}
+
+async function confirmCount(mode, count){
+  if(mode==='solo'){
+    state.soloCategory = state.pendingCategory;
+    state.soloSubKey = state.pendingSubKey;
+    state.soloQuestions = shuffle(pool(state.pendingCategory, state.pendingSubKey)).slice(0,count);
+    state.soloIdx = 0;
+    state.soloScore = 0;
+    state.soloStreak = 0;
+    state.soloAnswered = false;
+    state.screen = 'soloGame';
+    render();
+  } else {
+    await createRoom(state.pendingCategory, state.pendingSubKey, count);
+  }
+}
+
+/* ---------------------------------------------------------
+   SOLO MODE
+--------------------------------------------------------- */
+function renderSoloCategory(){
+  app.appendChild(topBar(goHome));
+  const wrap = el('div','screen');
+  wrap.appendChild(el('h2','','Elige una categoría'));
+  wrap.appendChild(el('div','muted', QUESTION_TIME + 's por pregunta · más puntos si respondes rápido'));
+  wrap.appendChild(categoryGrid((key)=> pickCategory('solo', key)));
+  app.appendChild(wrap);
+}
+
+let soloTimerInterval = null;
+function renderSoloGame(){
+  clearInterval(soloTimerInterval);
+  const cat = CATEGORIES[state.soloCategory];
+  const sub = cat.subcategories[state.soloSubKey];
+  const q = state.soloQuestions[state.soloIdx];
+
+  app.appendChild(topBar(goHome));
+  const wrap = el('div','screen');
+
+  const hud = el('div','hud');
+  hud.appendChild(el('div','score','⭐ ' + state.soloScore));
+  const streak = el('div','streak', state.soloStreak>1 ? ('🔥 Racha x'+state.soloStreak) : '');
+  hud.appendChild(streak);
+  hud.appendChild(el('div','qcount', (state.soloIdx+1) + ' / ' + state.soloQuestions.length));
+  wrap.appendChild(hud);
+
+  const timerWrap = el('div','timer-wrap');
+  const timerBar = el('div','timer-bar');
+  timerWrap.appendChild(timerBar);
+  wrap.appendChild(timerWrap);
+
+  const card = el('div','card');
+  const catPill = el('div','pill', sub.emoji+' '+sub.label);
+  catPill.style.background = 'rgba(255,255,255,0.08)';
+  catPill.style.color = cat.color;
+  card.appendChild(catPill);
+  card.appendChild(el('div','question-text', q.q));
+
+  const opts = el('div','options');
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((optText, i)=>{
+    const o = el('button','option');
+    const letter = el('div','letter', letters[i]);
+    o.appendChild(letter);
+    o.appendChild(el('span','', optText));
+    o.addEventListener('click', ()=> soloAnswer(i, opts, timerBar));
+    opts.appendChild(o);
+  });
+  card.appendChild(opts);
+  wrap.appendChild(card);
+  app.appendChild(wrap);
+
+  state.soloAnswered = false;
+  state.soloQStart = Date.now();
+  let timeLeft = QUESTION_TIME;
+  timerBar.style.width = '100%';
+  soloTimerInterval = setInterval(()=>{
+    timeLeft -= 0.1;
+    const pct = Math.max(0, (timeLeft/QUESTION_TIME)*100);
+    timerBar.style.width = pct + '%';
+    if(timeLeft<=0){
+      clearInterval(soloTimerInterval);
+      if(!state.soloAnswered) soloAnswer(-1, opts, timerBar);
+    }
+  }, 100);
+}
+
+function soloAnswer(choice, optsEl, timerBar){
+  if(state.soloAnswered) return;
+  state.soloAnswered = true;
+  clearInterval(soloTimerInterval);
+  const q = state.soloQuestions[state.soloIdx];
+  const elapsed = (Date.now() - state.soloQStart)/1000;
+  const buttons = optsEl.querySelectorAll('.option');
+  buttons.forEach((b,i)=>{
+    b.classList.add('locked');
+    if(i===q.a) b.classList.add('correct');
+    else if(i===choice) b.classList.add('wrong');
+  });
+  const correct = choice===q.a;
+  const pts = pointsForAnswer(correct, elapsed);
+  if(correct){
+    state.soloStreak++;
+    state.soloScore += pts;
+    burstConfetti();
+  } else {
+    state.soloStreak = 0;
+  }
+  setTimeout(()=>{
+    if(state.soloIdx < state.soloQuestions.length-1){
+      state.soloIdx++;
+      render();
+    } else {
+      state.screen = 'soloResults';
+      render();
+    }
+  }, 1100);
+}
+
+function renderSoloResults(){
+  clearInterval(soloTimerInterval);
+  const wrap = el('div','screen');
+  const total = state.soloQuestions.length;
+  const maxScore = total*1000;
+  const fraction = state.soloScore / maxScore;
+  let emoji = '👍';
+  let msg = '¡Buen intento!';
+  if(fraction >= 0.85){ emoji='🏆'; msg='¡Eres una leyenda del quiz!'; }
+  else if(fraction >= 0.65){ emoji='🔥'; msg='¡Impresionante!'; }
+  else if(fraction >= 0.4){ emoji='🙂'; msg='¡Nada mal!'; }
+  else { emoji='😅'; msg='¡A seguir practicando!'; }
+
+  wrap.appendChild(el('div','result-emoji', emoji));
+  wrap.appendChild(el('h2','center', msg));
+  const card = el('div','card center');
+  card.appendChild(el('div','muted','Puntaje final'));
+  card.appendChild(el('div','', '<span style="font-family:\'Baloo 2\';font-weight:800;font-size:2.4rem;">'+state.soloScore+'</span> pts'));
+  wrap.appendChild(card);
+
+  const again = el('button','btn','🔁 Jugar otra categoría');
+  again.addEventListener('click', ()=>{ state.screen='soloCategory'; render(); });
+  wrap.appendChild(again);
+
+  const home = el('button','btn secondary','🏠 Volver al inicio');
+  home.addEventListener('click', goHome);
+  wrap.appendChild(home);
+
+  app.appendChild(wrap);
+  burstConfetti();
+}
+
+/* ---------------------------------------------------------
+   ROOM MODE (multijugador online vía almacenamiento compartido)
+--------------------------------------------------------- */
+function renderRoomChoice(){
+  app.appendChild(topBar(goHome));
+  const wrap = el('div','screen');
+  wrap.appendChild(el('h2','','Jugar con amigos'));
+  wrap.appendChild(el('div','muted','Crea una sala y comparte el código, o únete con uno'));
+
+  const createBtn = el('button','btn','➕ Crear una sala');
+  createBtn.addEventListener('click', ()=>{ state.screen='roomCreateCategory'; render(); });
+  wrap.appendChild(createBtn);
+
+  const joinBtn = el('button','btn secondary','🔑 Unirme con un código');
+  joinBtn.addEventListener('click', ()=>{ state.screen='roomJoin'; render(); });
+  wrap.appendChild(joinBtn);
+
+  app.appendChild(wrap);
+}
+
+function renderRoomCreateCategory(){
+  app.appendChild(topBar(()=>{ state.screen='roomChoice'; render(); }));
+  const wrap = el('div','screen');
+  wrap.appendChild(el('h2','','Elige la categoría de la sala'));
+  wrap.appendChild(categoryGrid((key)=> pickCategory('room', key)));
+  app.appendChild(wrap);
+}
+
+async function createRoom(categoryKey, subKey, count){
+  const code = randCode();
+  const questions = shuffle(pool(categoryKey, subKey)).slice(0, count);
+  const meta = {
+    code, category: categoryKey, subcategory: subKey, status: 'lobby',
+    currentQuestion: -1, questionStartTime: null, questions,
+    hostId: state.myId, createdAt: Date.now()
+  };
+  if(!window.storage){
+    alert('El almacenamiento multijugador no está disponible en este entorno. Abre el juego como Artifact dentro de claude.ai (no como archivo .html suelto) para poder crear salas.');
+    return;
+  }
+  try{
+    await window.storage.set('room:'+code+':meta', JSON.stringify(meta), true);
+    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0}), true);
+  }catch(e){ console.error('createRoom error:', e); alert('No se pudo crear la sala: ' + (e && e.message ? e.message : e)); return; }
+
+  state.roomCode = code;
+  state.isHost = true;
+  state.roomMeta = meta;
+  state.screen = 'roomLobby';
+  render();
+  startPolling();
+}
+
+function renderRoomJoin(){
+  app.appendChild(topBar(()=>{ state.screen='roomChoice'; render(); }));
+  const wrap = el('div','screen');
+  wrap.appendChild(el('h2','','Unirme a una sala'));
+  const card = el('div','card');
+  card.appendChild(el('label','field-label','Código de sala'));
+  const input = el('input');
+  input.type='text'; input.placeholder='EJ. AB12C'; input.maxLength=5;
+  input.style.textTransform='uppercase';
+  input.style.letterSpacing='4px';
+  input.style.fontFamily = "'Baloo 2', sans-serif";
+  input.style.fontWeight = '700';
+  card.appendChild(input);
+  wrap.appendChild(card);
+
+  const joinBtn = el('button','btn','Entrar a la sala →');
+  joinBtn.addEventListener('click', ()=> joinRoom(input.value.trim().toUpperCase()));
+  wrap.appendChild(joinBtn);
+  app.appendChild(wrap);
+  setTimeout(()=>input.focus(),50);
+}
+
+async function joinRoom(code){
+  if(!code || code.length<3) return;
+  if(!window.storage){
+    alert('El almacenamiento multijugador no está disponible en este entorno. Abre el juego como Artifact dentro de claude.ai (no como archivo .html suelto) para poder unirte a salas.');
+    return;
+  }
+  let metaRes;
+  try{
+    metaRes = await window.storage.get('room:'+code+':meta', true);
+  }catch(e){ console.error('joinRoom get error:', e); alert('No encontramos esa sala. Revisa el código. (' + (e && e.message ? e.message : e) + ')'); return; }
+  if(!metaRes){ alert('No encontramos esa sala. Revisa el código.'); return; }
+  const meta = JSON.parse(metaRes.value);
+  try{
+    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0}), true);
+  }catch(e){ console.error('joinRoom set error:', e); alert('No se pudo unir a la sala: ' + (e && e.message ? e.message : e)); return; }
+
+  state.roomCode = code;
+  state.isHost = (meta.hostId === state.myId);
+  state.roomMeta = meta;
+  state.screen = meta.status === 'lobby' ? 'roomLobby' : (meta.status === 'finished' ? 'roomResults' : 'roomGame');
+  render();
+  startPolling();
+}
+
+function stopPolling(){
+  if(state.pollTimer){ clearInterval(state.pollTimer); state.pollTimer = null; }
+}
+
+function startPolling(){
+  stopPolling();
+  state.pollTimer = setInterval(pollRoom, 1500);
+  pollRoom();
+}
+
+async function pollRoom(){
+  if(!state.roomCode) return;
+  try{
+    const metaRes = await window.storage.get('room:'+state.roomCode+':meta', true);
+    if(!metaRes) return;
+    const meta = JSON.parse(metaRes.value);
+    const listRes = await window.storage.list('room:'+state.roomCode+':players:', true);
+    let players = [];
+    if(listRes && listRes.keys){
+      const gets = await Promise.all(listRes.keys.map(k => window.storage.get(k, true).catch(()=>null)));
+      players = gets.filter(Boolean).map(r => JSON.parse(r.value));
+    }
+    players.sort((a,b)=> b.score - a.score);
+    state.roomMeta = meta;
+    state.roomPlayers = players;
+
+    const targetScreen = meta.status === 'lobby' ? 'roomLobby' : (meta.status === 'finished' ? 'roomResults' : 'roomGame');
+    if(state.screen !== targetScreen){
+      state.screen = targetScreen;
+      state.myAnswered = false;
+      state.qStartLocal = meta.questionStartTime;
+    }
+    if(state.screen === 'roomGame' && state.qStartLocal !== meta.questionStartTime){
+      state.qStartLocal = meta.questionStartTime;
+      state.myAnswered = false;
+    }
+    render();
+
+    if(state.isHost) hostGameLoop(meta);
+  }catch(e){ /* red intermitente: ignorar este ciclo */ }
+}
+
+function hostGameLoop(meta){
+  if(meta.status !== 'playing') return;
+  const elapsed = (Date.now() - meta.questionStartTime)/1000;
+  if(elapsed >= QUESTION_TIME + 1.5){
+    advanceRoomQuestion(meta);
+  }
+}
+
+async function advanceRoomQuestion(meta){
+  const next = meta.currentQuestion + 1;
+  let newMeta;
+  if(next >= meta.questions.length){
+    newMeta = {...meta, status:'finished'};
+  } else {
+    newMeta = {...meta, currentQuestion: next, questionStartTime: Date.now(), status:'playing'};
+  }
+  try{
+    await window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true);
+  }catch(e){ /* ignore */ }
+}
+
+function renderRoomLobby(){
+  const wrap = el('div','screen');
+  const cat = CATEGORIES[state.roomMeta.category];
+  const sub = cat.subcategories[state.roomMeta.subcategory];
+
+  wrap.appendChild(el('div','tagline','Sala de espera'));
+  wrap.appendChild(el('div','code-display', state.roomCode));
+  const share = el('div','muted','Comparte este código con tus amigos para que se unan');
+  share.style.textAlign='center';
+  wrap.appendChild(share);
+
+  const pillRow = el('div','');
+  pillRow.style.display='flex';
+  pillRow.style.gap='8px';
+  pillRow.style.justifyContent='center';
+  pillRow.style.flexWrap='wrap';
+  const catPill = el('div','pill', sub.emoji+' '+sub.label);
+  catPill.style.background='rgba(255,255,255,0.08)';
+  catPill.style.color = cat.color;
+  const countPill = el('div','pill', '🔢 '+state.roomMeta.questions.length+' preguntas');
+  countPill.style.background='rgba(255,255,255,0.08)';
+  countPill.style.color = 'var(--text)';
+  pillRow.appendChild(catPill);
+  pillRow.appendChild(countPill);
+  wrap.appendChild(pillRow);
+
+  const card = el('div','card');
+  card.appendChild(el('h3','', 'Jugadores ('+state.roomPlayers.length+')'));
+  const list = el('div','');
+  list.style.marginTop='10px';
+  if(state.roomPlayers.length===0){
+    list.appendChild(el('div','muted','Esperando jugadores…'));
+  } else {
+    state.roomPlayers.forEach(p=>{
+      const row = el('div','player-row');
+      const nameWrap = el('div','name');
+      const av = el('div','avatar', initials(p.name));
+      av.style.background = colorFor(p.id);
+      nameWrap.appendChild(av);
+      nameWrap.appendChild(document.createTextNode(p.name + (p.id===state.roomMeta.hostId ? ' 👑' : '')));
+      row.appendChild(nameWrap);
+      list.appendChild(row);
+    });
+  }
+  card.appendChild(list);
+  wrap.appendChild(card);
+
+  if(state.isHost){
+    const startBtn = el('button','btn','▶️ Iniciar partida');
+    startBtn.disabled = state.roomPlayers.length < 1;
+    startBtn.addEventListener('click', async ()=>{
+      const newMeta = {...state.roomMeta, status:'playing', currentQuestion:0, questionStartTime:Date.now()};
+      await window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true);
+      pollRoom();
+    });
+    wrap.appendChild(startBtn);
+  } else {
+    wrap.appendChild(el('div','muted','Esperando a que el anfitrión inicie la partida…'));
+  }
+
+  const leave = el('button','btn secondary','Salir de la sala');
+  leave.addEventListener('click', goHome);
+  wrap.appendChild(leave);
+
+  app.appendChild(wrap);
+}
+
+let roomTimerRAF = null;
+function renderRoomGame(){
+  if(roomTimerRAF) cancelAnimationFrame(roomTimerRAF);
+  const meta = state.roomMeta;
+  const cat = CATEGORIES[meta.category];
+  const sub = cat.subcategories[meta.subcategory];
+  const q = meta.questions[meta.currentQuestion];
+  const me = state.roomPlayers.find(p=>p.id===state.myId) || {score:0};
+
+  const wrap = el('div','screen');
+  const hud = el('div','hud');
+  hud.appendChild(el('div','score','⭐ ' + me.score));
+  hud.appendChild(el('div','qcount', (meta.currentQuestion+1) + ' / ' + meta.questions.length));
+  wrap.appendChild(hud);
+
+  const timerWrap = el('div','timer-wrap');
+  const timerBar = el('div','timer-bar');
+  timerWrap.appendChild(timerBar);
+  wrap.appendChild(timerWrap);
+
+  const card = el('div','card');
+  const catPill = el('div','pill', sub.emoji+' '+sub.label);
+  catPill.style.background='rgba(255,255,255,0.08)';
+  catPill.style.color = cat.color;
+  card.appendChild(catPill);
+  card.appendChild(el('div','question-text', q.q));
+
+  const opts = el('div','options');
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((optText,i)=>{
+    const o = el('button','option');
+    o.appendChild(el('div','letter', letters[i]));
+    o.appendChild(el('span','', optText));
+    if(state.myAnswered) o.classList.add('locked');
+    o.addEventListener('click', ()=> roomAnswer(i, q, opts));
+    opts.appendChild(o);
+  });
+  card.appendChild(opts);
+  wrap.appendChild(card);
+
+  const mini = el('div','card');
+  mini.style.padding='14px 18px';
+  const sorted = state.roomPlayers.slice(0,3);
+  const rowline = el('div','muted','En cabeza: ' + (sorted.map(p=>p.name+' ('+p.score+')').join(' · ') || '—'));
+  mini.appendChild(rowline);
+  wrap.appendChild(mini);
+
+  app.appendChild(wrap);
+
+  function tick(){
+    const elapsed = (Date.now() - meta.questionStartTime)/1000;
+    const pct = Math.max(0, Math.min(100, ((QUESTION_TIME - elapsed)/QUESTION_TIME)*100));
+    timerBar.style.width = pct + '%';
+    if(elapsed < QUESTION_TIME + 1.5){
+      roomTimerRAF = requestAnimationFrame(tick);
+    }
+  }
+  tick();
+}
+
+async function roomAnswer(choice, q, optsEl){
+  if(state.myAnswered) return;
+  state.myAnswered = true;
+  const elapsed = (Date.now() - state.roomMeta.questionStartTime)/1000;
+  const buttons = optsEl.querySelectorAll('.option');
+  buttons.forEach((b,i)=>{
+    b.classList.add('locked');
+    if(i===q.a) b.classList.add('correct');
+    else if(i===choice) b.classList.add('wrong');
+  });
+  const correct = choice===q.a;
+  const pts = pointsForAnswer(correct, elapsed);
+  if(correct){
+    burstConfetti();
+    const me = state.roomPlayers.find(p=>p.id===state.myId);
+    const newScore = (me ? me.score : 0) + pts;
+    try{
+      await window.storage.set('room:'+state.roomCode+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:newScore}), true);
+    }catch(e){ /* ignore */ }
+  }
+}
+
+function renderRoomResults(){
+  if(roomTimerRAF) cancelAnimationFrame(roomTimerRAF);
+  const wrap = el('div','screen');
+  wrap.appendChild(el('div','result-emoji','🏁'));
+  wrap.appendChild(el('h2','center','¡Partida terminada!'));
+
+  const card = el('div','card');
+  card.appendChild(el('h3','','Marcador final'));
+  const list = el('div','');
+  list.style.marginTop='10px';
+  const ranked = state.roomPlayers.slice().sort((a,b)=>b.score-a.score);
+  ranked.forEach((p,i)=>{
+    const row = el('div','player-row');
+    const nameWrap = el('div','name');
+    const av = el('div','avatar', (i<3?['🥇','🥈','🥉'][i]:initials(p.name)));
+    av.className = 'avatar ' + (i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'');
+    if(i>2) av.style.background = colorFor(p.id);
+    nameWrap.appendChild(av);
+    nameWrap.appendChild(document.createTextNode(p.name));
+    row.appendChild(nameWrap);
+    row.appendChild(el('div','pts', p.score+' pts'));
+    list.appendChild(row);
+  });
+  card.appendChild(list);
+  wrap.appendChild(card);
+
+  if(state.isHost){
+    const again = el('button','btn','🔁 Nueva partida (misma sala)');
+    again.addEventListener('click', async ()=>{
+      const cat = state.roomMeta.category;
+      const subKey = state.roomMeta.subcategory;
+      const count = state.roomMeta.questions.length;
+      const questions = shuffle(pool(cat, subKey)).slice(0,count);
+      const resetMeta = {...state.roomMeta, status:'lobby', currentQuestion:-1, questionStartTime:null, questions};
+      await window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(resetMeta), true);
+      for(const p of state.roomPlayers){
+        await window.storage.set('room:'+state.roomCode+':players:'+p.id, JSON.stringify({...p, score:0}), true);
+      }
+      pollRoom();
+    });
+    wrap.appendChild(again);
+  }
+
+  const home = el('button','btn secondary','🏠 Volver al inicio');
+  home.addEventListener('click', goHome);
+  wrap.appendChild(home);
+
+  app.appendChild(wrap);
+  const winner = state.roomPlayers.slice().sort((a,b)=>b.score-a.score)[0];
+  if(winner && winner.id===state.myId) burstConfetti();
+}
+
+/* ---------------------------------------------------------
+   Confeti
+--------------------------------------------------------- */
+function burstConfetti(){
+  const colors = ['#8CFF6B','#FFC93C','#FF4FA3','#34D2FF','#B98CFF'];
+  for(let i=0;i<28;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (1.6 + Math.random()*1.2) + 's';
+    p.style.opacity = 0.9;
+    document.body.appendChild(p);
+    setTimeout(()=> p.remove(), 3200);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
