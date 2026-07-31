@@ -750,7 +750,7 @@ const CATEGORIES = {
   }
 };
 
-const QUESTION_TIME = 15; // segundos por pregunta
+const QUESTION_TIME = 10; // segundos por pregunta
 const COUNT_OPTIONS = [5,10,15,20,30];
 const AVATAR_COLORS = ["#8CFF6B","#FFC93C","#FF4FA3","#34D2FF","#B98CFF","#FF8C5B"];
 
@@ -816,7 +816,8 @@ const state = {
   roomPlayers: [],
   myAnswered: false,
   pollTimer: null,
-  qStartLocal: null
+  qStartLocal: null,
+  advancing: false
 };
 
 const app = document.getElementById('app');
@@ -1270,16 +1271,24 @@ async function pollRoom(){
     state.roomPlayers = players;
 
     const targetScreen = meta.status === 'lobby' ? 'roomLobby' : (meta.status === 'finished' ? 'roomResults' : 'roomGame');
+    let needsFullRender = true;
     if(state.screen !== targetScreen){
       state.screen = targetScreen;
       state.myAnswered = false;
       state.qStartLocal = meta.questionStartTime;
+    } else if(state.screen === 'roomGame'){
+      if(state.qStartLocal !== meta.questionStartTime){
+        state.qStartLocal = meta.questionStartTime;
+        state.myAnswered = false;
+      } else {
+        needsFullRender = false;
+      }
     }
-    if(state.screen === 'roomGame' && state.qStartLocal !== meta.questionStartTime){
-      state.qStartLocal = meta.questionStartTime;
-      state.myAnswered = false;
+    if(needsFullRender){
+      render();
+    } else {
+      updateRoomGameLive();
     }
-    render();
 
     if(state.isHost) hostGameLoop(meta);
   }catch(e){ /* red intermitente: ignorar este ciclo */ }
@@ -1287,9 +1296,14 @@ async function pollRoom(){
 
 function hostGameLoop(meta){
   if(meta.status !== 'playing') return;
+  if(state.advancing) return;
   const elapsed = (Date.now() - meta.questionStartTime)/1000;
-  if(elapsed >= QUESTION_TIME + 1.5){
-    advanceRoomQuestion(meta);
+  const players = state.roomPlayers;
+  const allAnswered = players.length > 0 && players.every(p => p.answeredQ === meta.currentQuestion);
+  const minRevealTime = 1.5; // segundos para mostrar respuesta correcta antes de pasar
+  if((allAnswered && elapsed >= minRevealTime) || elapsed >= QUESTION_TIME + 1.5){
+    state.advancing = true;
+    advanceRoomQuestion(meta).finally(()=>{ state.advancing = false; });
   }
 }
 
@@ -1374,6 +1388,8 @@ function renderRoomLobby(){
 }
 
 let roomTimerRAF = null;
+let roomGameHudScoreEl = null;
+let roomGameLeaderboardEl = null;
 function renderRoomGame(){
   if(roomTimerRAF) cancelAnimationFrame(roomTimerRAF);
   const meta = state.roomMeta;
@@ -1384,9 +1400,11 @@ function renderRoomGame(){
 
   const wrap = el('div','screen');
   const hud = el('div','hud');
-  hud.appendChild(el('div','score','⭐ ' + me.score));
+  const scoreEl = el('div','score','⭐ ' + me.score);
+  hud.appendChild(scoreEl);
   hud.appendChild(el('div','qcount', (meta.currentQuestion+1) + ' / ' + meta.questions.length));
   wrap.appendChild(hud);
+  roomGameHudScoreEl = scoreEl;
 
   const timerWrap = el('div','timer-wrap');
   const timerBar = el('div','timer-bar');
@@ -1419,6 +1437,7 @@ function renderRoomGame(){
   const rowline = el('div','muted','En cabeza: ' + (sorted.map(p=>p.name+' ('+p.score+')').join(' · ') || '—'));
   mini.appendChild(rowline);
   wrap.appendChild(mini);
+  roomGameLeaderboardEl = rowline;
 
   app.appendChild(wrap);
 
@@ -1433,6 +1452,14 @@ function renderRoomGame(){
   tick();
 }
 
+function updateRoomGameLive(){
+  if(!roomGameHudScoreEl || !roomGameLeaderboardEl) return;
+  const me = state.roomPlayers.find(p=>p.id===state.myId) || {score:0};
+  roomGameHudScoreEl.textContent = '⭐ ' + me.score;
+  const sorted = state.roomPlayers.slice(0,3);
+  roomGameLeaderboardEl.textContent = 'En cabeza: ' + (sorted.map(p=>p.name+' ('+p.score+')').join(' · ') || '—');
+}
+
 async function roomAnswer(choice, q, optsEl){
   if(state.myAnswered) return;
   state.myAnswered = true;
@@ -1445,14 +1472,12 @@ async function roomAnswer(choice, q, optsEl){
   });
   const correct = choice===q.a;
   const pts = pointsForAnswer(correct, elapsed);
-  if(correct){
-    burstConfetti();
-    const me = state.roomPlayers.find(p=>p.id===state.myId);
-    const newScore = (me ? me.score : 0) + pts;
-    try{
-      await window.storage.set('room:'+state.roomCode+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:newScore}), true);
-    }catch(e){ /* ignore */ }
-  }
+  if(correct) burstConfetti();
+  const me = state.roomPlayers.find(p=>p.id===state.myId);
+  const newScore = (me ? me.score : 0) + pts;
+  try{
+    await window.storage.set('room:'+state.roomCode+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:newScore, answeredQ: state.roomMeta.currentQuestion}), true);
+  }catch(e){ /* ignore */ }
 }
 
 function renderRoomResults(){
