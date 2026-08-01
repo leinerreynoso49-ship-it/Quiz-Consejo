@@ -932,6 +932,90 @@ const CATEGORIES = {
   }
 };
 
+/* ---------------------------------------------------------
+   Banco exclusivo del Modo Supervivencia (70 preguntas mezcladas,
+   distintas a las de cualquier otra categoría)
+--------------------------------------------------------- */
+const SURVIVAL_QUESTIONS = [
+  // Deportes
+  {q:"¿En qué deporte se usa el término \"ace\" para un saque directo sin respuesta?", opts:["Tenis","Vóleibol","Bádminton","Squash"], a:0},
+  {q:"¿Cuántos jugadores forman un equipo de baloncesto dentro de la cancha por lado?", opts:["4","5","6","7"], a:1},
+  {q:"¿En qué país se originó el rugby moderno?", opts:["Francia","Inglaterra","Gales","Nueva Zelanda"], a:1},
+  {q:"¿Cuál es la distancia oficial de una maratón?", opts:["40 km","41 km","42.195 km","45 km"], a:2},
+  {q:"¿En qué ciudad se juega Wimbledon, el famoso torneo de tenis sobre césped?", opts:["París","Londres","Nueva York","Melbourne"], a:1},
+  {q:"¿Cada cuántos años se celebran los Juegos Olímpicos de verano?", opts:["2","3","4","5"], a:2},
+  {q:"¿En qué continente se disputa la Copa América de fútbol?", opts:["América del Sur","Europa","África","Asia"], a:0},
+  {q:"¿Cuántos sets se necesitan ganar para vencer un partido de tenis a 5 sets?", opts:["2","3","4","5"], a:1},
+  {q:"¿Qué país ha ganado más medallas olímpicas en toda la historia?", opts:["China","Rusia","Estados Unidos","Alemania"], a:2},
+  {q:"¿En qué deporte se usa un \"birdie\" o volante en lugar de una pelota?", opts:["Tenis de mesa","Bádminton","Squash","Pádel"], a:1},
+  // Cultura General
+  {q:"¿Cuál es el país más poblado del mundo actualmente?", opts:["China","India","Estados Unidos","Indonesia"], a:1},
+  {q:"¿Qué instrumento se usa para medir la presión atmosférica?", opts:["Termómetro","Barómetro","Higrómetro","Anemómetro"], a:1},
+  {q:"¿Cuál es el lago más grande del mundo por superficie?", opts:["Lago Superior","Mar Caspio","Lago Victoria","Lago Baikal"], a:1},
+  {q:"¿Qué gas es el más abundante en la atmósfera terrestre?", opts:["Oxígeno","Nitrógeno","Dióxido de carbono","Hidrógeno"], a:1},
+  {q:"¿Cuál es la capital de Rusia?", opts:["San Petersburgo","Moscú","Kiev","Minsk"], a:1},
+  {q:"¿Qué científico propuso la ley de la gravitación universal?", opts:["Albert Einstein","Isaac Newton","Galileo Galilei","Johannes Kepler"], a:1},
+  {q:"¿Qué país cuenta con más husos horarios oficiales, contando sus territorios de ultramar?", opts:["Rusia","Estados Unidos","Francia","China"], a:2},
+  {q:"¿Cuál es la capital de Corea del Sur?", opts:["Seúl","Busan","Tokio","Pyongyang"], a:0},
+  {q:"Además del agua y la luz, ¿qué gas es esencial para la fotosíntesis?", opts:["Dióxido de carbono","Nitrógeno","Helio","Argón"], a:0},
+  {q:"¿Cuál es el punto más profundo conocido de los océanos?", opts:["Fosa de Puerto Rico","Fosa de las Marianas","Fosa de Java","Fosa de Tonga"], a:1},
+  // Películas y series
+  {q:"¿Qué actor interpretó a Neo en \"The Matrix\"?", opts:["Keanu Reeves","Brad Pitt","Tom Cruise","Will Smith"], a:0},
+  {q:"¿Cómo se llama el barco en la película \"Titanic\"?", opts:["Titanic","Britannic","Olympic","Lusitania"], a:0},
+  {q:"¿Qué director dirigió la trilogía cinematográfica de \"El Señor de los Anillos\"?", opts:["James Cameron","Peter Jackson","Ridley Scott","Christopher Nolan"], a:1},
+  {q:"En \"Juego de Tronos\", ¿cuál de los dragones de Daenerys es el primero en morir?", opts:["Drogon","Rhaegal","Viserion","Balerion"], a:2},
+  {q:"¿Cómo se llama la saga de libros y películas sobre un joven mago llamado Harry?", opts:["Narnia","Harry Potter","Percy Jackson","Los Juegos del Hambre"], a:1},
+  {q:"¿En qué serie animada aparece la familia Simpson?", opts:["Padre de Familia","Los Simpson","South Park","Bob Esponja"], a:1},
+  {q:"¿Qué actor interpretó al Dr. House en la serie \"House M.D.\"?", opts:["Hugh Laurie","Bryan Cranston","Kevin Spacey","Matthew Perry"], a:0},
+  {q:"¿Qué actor puso la voz original en inglés de Darth Vader en \"Star Wars\"?", opts:["James Earl Jones","Mark Hamill","Alec Guinness","David Prowse"], a:0},
+  {q:"¿Cómo se llama la película de Pixar sobre juguetes que cobran vida?", opts:["Cars","Toy Story","Up","Ratatouille"], a:1},
+  {q:"¿En qué película aparece el personaje \"Forrest Gump\"?", opts:["Forrest Gump","Rain Man","Big","Philadelphia"], a:0},
+  // Redes Sociales
+  {q:"¿En qué año se lanzó Snapchat?", opts:["2009","2011","2013","2015"], a:1},
+  {q:"¿Qué app de video corto pertenece a la empresa china ByteDance?", opts:["TikTok","Instagram","YouTube","Twitch"], a:0},
+  {q:"¿Cómo se llama la moneda virtual usada para donaciones en Twitch?", opts:["Bits","Coins","Gems","Tokens"], a:0},
+  {q:"¿Qué app de mensajería, fundada por hermanos rusos, es conocida por sus canales públicos?", opts:["Telegram","Signal","WhatsApp","Discord"], a:0},
+  {q:"En el contexto de tecnología y redes, ¿qué significan las siglas \"IA\"?", opts:["Inteligencia Artificial","Internet Avanzado","Información Automática","Interfaz Activa"], a:0},
+  {q:"¿Qué red social se hizo popular originalmente por publicar solo fotos en formato cuadrado?", opts:["Instagram","Facebook","Pinterest","Flickr"], a:0},
+  {q:"¿Cómo se le llama a un usuario que consume contenido sin comentar ni compartir nada?", opts:["Lurker","Hater","Follower","Creador"], a:0},
+  {q:"¿Qué red social descentralizada usa \"toots\" como alternativa a Twitter/X?", opts:["Mastodon","Bluesky","Threads","Truth Social"], a:0},
+  {q:"¿En qué año cambió oficialmente Twitter su nombre y logo a \"X\"?", opts:["2021","2022","2023","2024"], a:2},
+  {q:"¿Cómo se le llama al contenido pagado por una marca y publicado por un influencer?", opts:["Post orgánico","Contenido patrocinado","Boletín","Story destacada"], a:1},
+  // Animes
+  {q:"¿Cómo se llama la unidad de élite que persigue las esferas del dragón en Dragon Ball Z?", opts:["Fuerza Ginyu","Red Ribbon","Akatsuki","Millenium"], a:0},
+  {q:"¿A qué organización criminal pertenece Itachi Uchiha en Naruto?", opts:["Akatsuki","Root","Anbu","Sonido"], a:0},
+  {q:"¿Qué protagonista de \"Bleach\" es un estudiante que se convierte en Shinigami sustituto?", opts:["Ichigo Kurosaki","Uryu Ishida","Renji Abarai","Kenpachi"], a:0},
+  {q:"¿En qué ciudad ficticia (basada en la real) transcurre gran parte de \"Tokyo Ghoul\"?", opts:["Tokio","Osaka","Kioto","Yokohama"], a:0},
+  {q:"¿Cómo se llama el protagonista de \"Fullmetal Alchemist\" que pierde un brazo y una pierna?", opts:["Edward Elric","Alphonse Elric","Roy Mustang","Ling Yao"], a:0},
+  {q:"¿Qué estudio de animación produjo \"Demon Slayer: Kimetsu no Yaiba\"?", opts:["MAPPA","Ufotable","Bones","Toei Animation"], a:1},
+  {q:"¿Cómo se llama el legendario \"Rey de los Piratas\" cuyo tesoro busca Luffy?", opts:["Barbanegra","Gol D. Roger","Shanks","Barbablanca"], a:1},
+  {q:"¿Qué protagonista de \"One Punch Man\" derrota a cualquier enemigo con un solo golpe?", opts:["Genos","Saitama","Mumen Rider","Bang"], a:1},
+  {q:"¿Cómo se llama el gato mágico compañero de Natsu en \"Fairy Tail\"?", opts:["Happy","Charle","Lily","Plue"], a:0},
+  {q:"¿Qué anime trata sobre jugadores atrapados dentro de un videojuego de realidad virtual mortal?", opts:["Sword Art Online",".hack","Overlord","No Game No Life"], a:0},
+  // Historia
+  {q:"¿En qué año cayó Constantinopla ante el Imperio Otomano?", opts:["1453","1492","1517","1389"], a:0},
+  {q:"¿Quién fue el primer emperador de Roma?", opts:["Julio César","Augusto","Nerón","Trajano"], a:1},
+  {q:"¿En qué siglo comenzó la Revolución Industrial en Inglaterra?", opts:["XVI","XVII","XVIII","XIX"], a:2},
+  {q:"¿Qué país lanzó la primera bomba atómica usada en un conflicto bélico?", opts:["Alemania","Estados Unidos","Rusia","Japón"], a:1},
+  {q:"¿Quién lideró la independencia de la India mediante resistencia pacífica?", opts:["Jawaharlal Nehru","Mahatma Gandhi","Subhas Chandra Bose","Muhammad Ali Jinnah"], a:1},
+  {q:"¿En qué año terminó la Primera Guerra Mundial?", opts:["1914","1918","1920","1922"], a:1},
+  {q:"¿Qué civilización construyó Machu Picchu?", opts:["Azteca","Maya","Inca","Olmeca"], a:2},
+  {q:"¿Qué faraón egipcio tuvo una tumba descubierta casi intacta en 1922?", opts:["Ramsés II","Tutankamón","Akenatón","Keops"], a:1},
+  {q:"¿En qué año se firmó la Declaración de Independencia de Estados Unidos?", opts:["1774","1776","1783","1789"], a:1},
+  {q:"¿Qué muro dividió una ciudad europea durante la Guerra Fría?", opts:["Muro de Berlín","Muralla China","Muro de Adriano","Línea Maginot"], a:0},
+  // Ciencia y Geografía
+  {q:"¿Cuál es el hueso más pequeño del cuerpo humano?", opts:["Estribo (oído)","Falange","Rótula","Clavícula"], a:0},
+  {q:"¿Cuántos planetas oficialmente reconocidos tiene el sistema solar?", opts:["7","8","9","10"], a:1},
+  {q:"¿A qué velocidad aproximada viaja la luz en el vacío?", opts:["300,000 km/s","150,000 km/s","1,000,000 km/s","30,000 km/s"], a:0},
+  {q:"¿Cuál es el país más extenso del mundo por territorio?", opts:["Rusia","Canadá","China","Estados Unidos"], a:0},
+  {q:"¿Cuál es el río más largo de Europa?", opts:["Danubio","Volga","Rin","Sena"], a:1},
+  {q:"¿Qué capa de la Tierra es la más externa?", opts:["Núcleo","Manto","Corteza","Litosfera"], a:2},
+  {q:"¿Cuál es el metal más ligero que existe?", opts:["Aluminio","Litio","Titanio","Magnesio"], a:1},
+  {q:"¿Cuántos huesos tiene aproximadamente una mano humana, incluyendo la muñeca?", opts:["27","32","21","35"], a:0},
+  {q:"¿Cuál es el país más pequeño del mundo?", opts:["Mónaco","Vaticano","San Marino","Liechtenstein"], a:1},
+  {q:"¿Qué planeta del sistema solar es famoso por sus prominentes anillos visibles?", opts:["Saturno","Júpiter","Urano","Neptuno"], a:0}
+];
+
 const QUESTION_TIME = 10; // segundos por pregunta
 const COUNT_OPTIONS = [5,10,15,20,30];
 const AVATAR_COLORS = ["#8CFF6B","#FFC93C","#FF4FA3","#34D2FF","#B98CFF","#FF8C5B"];
@@ -963,6 +1047,16 @@ function initials(name){
 }
 function pool(catKey, subKey){
   return CATEGORIES[catKey].subcategories[subKey].questions;
+}
+function getMetaCatInfo(meta){
+  if(meta.mode === 'survival'){
+    return {
+      cat: {label:'Supervivencia', emoji:'🔥', css:'cat-vf', color:'var(--danger)'},
+      sub: {label:'Todas las categorías mezcladas', emoji:'🔀'}
+    };
+  }
+  const cat = CATEGORIES[meta.category];
+  return { cat, sub: cat.subcategories[meta.subcategory] };
 }
 function pointsForAnswer(correct, elapsedSeconds){
   if(!correct) return 0;
@@ -1033,7 +1127,10 @@ const state = {
   myAnswered: false,
   pollTimer: null,
   qStartLocal: null,
-  advancing: false
+  advancing: false,
+  // supervivencia
+  survivalOverlayShownForQ: null,
+  showingElimination: false
 };
 
 const app = document.getElementById('app');
@@ -1049,6 +1146,7 @@ function render(){
     soloResults: renderSoloResults,
     roomChoice: renderRoomChoice,
     roomCreateCategory: renderRoomCreateCategory,
+    roomSurvivalIntro: renderRoomSurvivalIntro,
     roomSubcategory: ()=>renderSubcategoryScreen('room'),
     roomCount: ()=>renderCountScreen('room'),
     roomJoin: renderRoomJoin,
@@ -1199,7 +1297,8 @@ function goHome(){
     screen:'home', mode:null, pendingCategory:null, pendingSubKey:null,
     soloCategory:null, soloSubKey:null, soloIdx:0, soloScore:0, soloStreak:0, soloAnswered:false,
     soloQuestions:[], roomCode:null, isHost:false, roomMeta:null, roomPlayers:[], myAnswered:false,
-    lastCoinReward:0, roomCoinsAwarded:false
+    lastCoinReward:0, roomCoinsAwarded:false,
+    survivalOverlayShownForQ:null, showingElimination:false
   });
   render();
 }
@@ -1648,6 +1747,36 @@ function renderRoomChoice(){
   joinBtn.addEventListener('click', ()=>{ state.screen='roomJoin'; render(); });
   wrap.appendChild(joinBtn);
 
+  const survivalBtn = el('button','btn secondary','🔥 Modo Supervivencia');
+  survivalBtn.style.borderColor = 'var(--danger)';
+  survivalBtn.style.color = 'var(--danger)';
+  survivalBtn.addEventListener('click', ()=>{ state.screen='roomSurvivalIntro'; render(); });
+  wrap.appendChild(survivalBtn);
+
+  app.appendChild(wrap);
+}
+
+function renderRoomSurvivalIntro(){
+  app.appendChild(topBar(()=>{ state.screen='roomChoice'; render(); }));
+  const wrap = el('div','screen');
+  wrap.appendChild(el('h2','','🔥 Modo Supervivencia'));
+  wrap.appendChild(el('div','muted','Todos responden las mismas '+SURVIVAL_QUESTIONS.length+' preguntas, mezcladas entre todas las categorías. Si fallas, quedas eliminado. ¡Gana quien sobreviva más tiempo!'));
+
+  const card = el('div','card');
+  const rules = [
+    '❌ Si respondes mal (o se acaba el tiempo), quedas eliminado.',
+    '🙈 No verás quién va ganando durante la partida.',
+    '💀 Cuando alguien cae, su nombre aparece en pantalla por un momento.',
+    '🏆 La partida termina cuando queda un solo sobreviviente (o todos caen).'
+  ];
+  rules.forEach(r=> card.appendChild(el('div','muted', r)));
+  wrap.appendChild(card);
+
+  const startBtn = el('button','btn','➕ Crear sala de supervivencia');
+  startBtn.style.background = 'linear-gradient(90deg,var(--danger),var(--cultura))';
+  startBtn.addEventListener('click', ()=> createRoom('survival','mixed',SURVIVAL_QUESTIONS.length,'survival'));
+  wrap.appendChild(startBtn);
+
   app.appendChild(wrap);
 }
 
@@ -1659,12 +1788,16 @@ function renderRoomCreateCategory(){
   app.appendChild(wrap);
 }
 
-async function createRoom(categoryKey, subKey, count){
+async function createRoom(categoryKey, subKey, count, mode){
+  mode = mode || 'normal';
   const code = randCode();
-  const questions = shuffle(pool(categoryKey, subKey)).slice(0, count);
+  const questions = mode === 'survival'
+    ? shuffle(SURVIVAL_QUESTIONS).slice(0, count)
+    : shuffle(pool(categoryKey, subKey)).slice(0, count);
   const meta = {
-    code, category: categoryKey, subcategory: subKey, status: 'lobby',
+    code, category: categoryKey, subcategory: subKey, mode, status: 'lobby',
     currentQuestion: -1, questionStartTime: null, questions,
+    lastEliminated: [], lastEliminatedQ: -1,
     hostId: state.myId, createdAt: Date.now()
   };
   if(!window.storage){
@@ -1673,7 +1806,7 @@ async function createRoom(categoryKey, subKey, count){
   }
   try{
     await window.storage.set('room:'+code+':meta', JSON.stringify(meta), true);
-    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0, avatarId:state.avatarId}), true);
+    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0, avatarId:state.avatarId, alive:true}), true);
   }catch(e){ console.error('createRoom error:', e); alert('No se pudo crear la sala: ' + (e && e.message ? e.message : e)); return; }
 
   state.roomCode = code;
@@ -1719,7 +1852,7 @@ async function joinRoom(code){
   if(!metaRes){ alert('No encontramos esa sala. Revisa el código.'); return; }
   const meta = JSON.parse(metaRes.value);
   try{
-    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0, avatarId:state.avatarId}), true);
+    await window.storage.set('room:'+code+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:0, avatarId:state.avatarId, alive:true}), true);
   }catch(e){ console.error('joinRoom set error:', e); alert('No se pudo unir a la sala: ' + (e && e.message ? e.message : e)); return; }
 
   state.roomCode = code;
@@ -1770,10 +1903,12 @@ async function pollRoom(){
         needsFullRender = false;
       }
     }
-    if(needsFullRender){
-      render();
-    } else {
-      updateRoomGameLive();
+    if(!state.showingElimination){
+      if(needsFullRender){
+        render();
+      } else {
+        updateRoomGameLive();
+      }
     }
 
     if(state.isHost) hostGameLoop(meta);
@@ -1785,7 +1920,8 @@ function hostGameLoop(meta){
   if(state.advancing) return;
   const elapsed = (Date.now() - meta.questionStartTime)/1000;
   const players = state.roomPlayers;
-  const allAnswered = players.length > 0 && players.every(p => p.answeredQ === meta.currentQuestion);
+  const relevantPlayers = meta.mode === 'survival' ? players.filter(p => p.alive !== false) : players;
+  const allAnswered = relevantPlayers.length > 0 && relevantPlayers.every(p => p.answeredQ === meta.currentQuestion);
   const minRevealTime = 1.5; // segundos para mostrar respuesta correcta antes de pasar
   if((allAnswered && elapsed >= minRevealTime) || elapsed >= QUESTION_TIME + 1.5){
     state.advancing = true;
@@ -1795,11 +1931,20 @@ function hostGameLoop(meta){
 
 async function advanceRoomQuestion(meta){
   const next = meta.currentQuestion + 1;
+  let lastEliminated = [];
+  let aliveCount = null;
+  if(meta.mode === 'survival'){
+    lastEliminated = state.roomPlayers
+      .filter(p => p.answeredQ === meta.currentQuestion && p.alive === false)
+      .map(p => p.name);
+    aliveCount = state.roomPlayers.filter(p => p.alive !== false).length;
+  }
   let newMeta;
-  if(next >= meta.questions.length){
-    newMeta = {...meta, status:'finished'};
+  const survivalOver = meta.mode === 'survival' && aliveCount <= 1;
+  if(survivalOver || next >= meta.questions.length){
+    newMeta = {...meta, status:'finished', lastEliminated, lastEliminatedQ: meta.currentQuestion};
   } else {
-    newMeta = {...meta, currentQuestion: next, questionStartTime: Date.now(), status:'playing'};
+    newMeta = {...meta, currentQuestion: next, questionStartTime: Date.now(), status:'playing', lastEliminated, lastEliminatedQ: meta.currentQuestion};
   }
   try{
     await window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true);
@@ -1809,8 +1954,8 @@ async function advanceRoomQuestion(meta){
 function renderRoomLobby(){
   state.roomCoinsAwarded = false;
   const wrap = el('div','screen');
-  const cat = CATEGORIES[state.roomMeta.category];
-  const sub = cat.subcategories[state.roomMeta.subcategory];
+  const { cat, sub } = getMetaCatInfo(state.roomMeta);
+  const isSurvival = state.roomMeta.mode === 'survival';
 
   wrap.appendChild(el('div','tagline','Sala de espera'));
   wrap.appendChild(el('div','code-display', state.roomCode));
@@ -1833,6 +1978,12 @@ function renderRoomLobby(){
   pillRow.appendChild(countPill);
   wrap.appendChild(pillRow);
 
+  if(isSurvival){
+    const rulesNote = el('div','muted','❌ Falla y quedas eliminado · 🏆 gana quien sobreviva');
+    rulesNote.style.textAlign='center';
+    wrap.appendChild(rulesNote);
+  }
+
   const card = el('div','card');
   card.appendChild(el('h3','', 'Jugadores ('+state.roomPlayers.length+')'));
   const list = el('div','');
@@ -1854,8 +2005,12 @@ function renderRoomLobby(){
   wrap.appendChild(card);
 
   if(state.isHost){
+    const minPlayers = isSurvival ? 2 : 1;
     const startBtn = el('button','btn','▶️ Iniciar partida');
-    startBtn.disabled = state.roomPlayers.length < 1;
+    startBtn.disabled = state.roomPlayers.length < minPlayers;
+    if(isSurvival && state.roomPlayers.length < minPlayers){
+      wrap.appendChild(el('div','muted','Necesitas al menos 2 jugadores para el modo supervivencia'));
+    }
     startBtn.addEventListener('click', async ()=>{
       const newMeta = {...state.roomMeta, status:'playing', currentQuestion:0, questionStartTime:Date.now()};
       await window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true);
@@ -1875,14 +2030,52 @@ function renderRoomLobby(){
 
 let roomTimerRAF = null;
 let roomGameHudScoreEl = null;
-let roomGameLeaderboardEl = null;
+let roomGameSurvivorsEl = null;
+
+function maybeShowEliminationOverlay(meta){
+  if(meta.mode === 'survival' && meta.lastEliminated && meta.lastEliminated.length &&
+     state.survivalOverlayShownForQ !== meta.lastEliminatedQ){
+    state.survivalOverlayShownForQ = meta.lastEliminatedQ;
+    state.showingElimination = true;
+    renderEliminationSequence(meta.lastEliminated, ()=>{
+      state.showingElimination = false;
+      render();
+    });
+    return true;
+  }
+  return false;
+}
+
+function renderEliminationSequence(names, onDone){
+  app.innerHTML = '';
+  const wrap = el('div','screen');
+  const card = el('div','card center');
+  card.style.padding = '48px 24px';
+  wrap.appendChild(card);
+  app.appendChild(wrap);
+  let i = 0;
+  function showNext(){
+    if(i >= names.length){ onDone(); return; }
+    card.innerHTML = '';
+    card.appendChild(el('div','result-emoji','💀'));
+    card.appendChild(el('h2','center', names[i]));
+    card.appendChild(el('div','muted','Ha sido eliminado'));
+    i++;
+    setTimeout(showNext, 2000);
+  }
+  showNext();
+}
+
 function renderRoomGame(){
   if(roomTimerRAF) cancelAnimationFrame(roomTimerRAF);
   const meta = state.roomMeta;
-  const cat = CATEGORIES[meta.category];
-  const sub = cat.subcategories[meta.subcategory];
+  if(maybeShowEliminationOverlay(meta)) return;
+
+  const { cat, sub } = getMetaCatInfo(meta);
+  const isSurvival = meta.mode === 'survival';
   const q = meta.questions[meta.currentQuestion];
-  const me = state.roomPlayers.find(p=>p.id===state.myId) || {score:0};
+  const me = state.roomPlayers.find(p=>p.id===state.myId) || {score:0, alive:true};
+  const meAlive = me.alive !== false;
 
   const wrap = el('div','screen');
   const hud = el('div','hud');
@@ -1904,26 +2097,36 @@ function renderRoomGame(){
   card.appendChild(catPill);
   card.appendChild(el('div','question-text', q.q));
 
-  const opts = el('div','options');
-  const letters = ['A','B','C','D'];
-  q.opts.forEach((optText,i)=>{
-    const o = el('button','option');
-    o.appendChild(el('div','letter', letters[i]));
-    o.appendChild(el('span','', optText));
-    if(state.myAnswered) o.classList.add('locked');
-    o.addEventListener('click', ()=> roomAnswer(i, q, opts));
-    opts.appendChild(o);
-  });
-  card.appendChild(opts);
+  if(isSurvival && !meAlive){
+    const spectatorMsg = el('div','muted','💀 Fuiste eliminado. Observa cómo termina la partida…');
+    spectatorMsg.style.marginTop = '14px';
+    card.appendChild(spectatorMsg);
+  } else {
+    const opts = el('div','options');
+    const letters = ['A','B','C','D'];
+    q.opts.forEach((optText,i)=>{
+      const o = el('button','option');
+      o.appendChild(el('div','letter', letters[i]));
+      o.appendChild(el('span','', optText));
+      if(state.myAnswered) o.classList.add('locked');
+      o.addEventListener('click', ()=> roomAnswer(i, q, opts));
+      opts.appendChild(o);
+    });
+    card.appendChild(opts);
+  }
   wrap.appendChild(card);
 
-  const mini = el('div','card');
-  mini.style.padding='14px 18px';
-  const sorted = state.roomPlayers.slice(0,3);
-  const rowline = el('div','muted','En cabeza: ' + (sorted.map(p=>p.name+' ('+p.score+')').join(' · ') || '—'));
-  mini.appendChild(rowline);
-  wrap.appendChild(mini);
-  roomGameLeaderboardEl = rowline;
+  if(isSurvival){
+    const survivorsCard = el('div','card');
+    survivorsCard.style.padding='14px 18px';
+    const aliveCount = state.roomPlayers.filter(p=>p.alive!==false).length;
+    const survivorsLine = el('div','muted','🧍 Sobrevivientes: '+aliveCount+' / '+state.roomPlayers.length);
+    survivorsCard.appendChild(survivorsLine);
+    wrap.appendChild(survivorsCard);
+    roomGameSurvivorsEl = survivorsLine;
+  } else {
+    roomGameSurvivorsEl = null;
+  }
 
   app.appendChild(wrap);
 
@@ -1939,11 +2142,13 @@ function renderRoomGame(){
 }
 
 function updateRoomGameLive(){
-  if(!roomGameHudScoreEl || !roomGameLeaderboardEl) return;
+  if(!roomGameHudScoreEl) return;
   const me = state.roomPlayers.find(p=>p.id===state.myId) || {score:0};
   roomGameHudScoreEl.textContent = '⭐ ' + me.score;
-  const sorted = state.roomPlayers.slice(0,3);
-  roomGameLeaderboardEl.textContent = 'En cabeza: ' + (sorted.map(p=>p.name+' ('+p.score+')').join(' · ') || '—');
+  if(roomGameSurvivorsEl){
+    const aliveCount = state.roomPlayers.filter(p=>p.alive!==false).length;
+    roomGameSurvivorsEl.textContent = '🧍 Sobrevivientes: '+aliveCount+' / '+state.roomPlayers.length;
+  }
 }
 
 async function roomAnswer(choice, q, optsEl){
@@ -1961,30 +2166,53 @@ async function roomAnswer(choice, q, optsEl){
   if(correct) burstConfetti();
   const me = state.roomPlayers.find(p=>p.id===state.myId);
   const newScore = (me ? me.score : 0) + pts;
+  const isSurvival = state.roomMeta.mode === 'survival';
+  const stillAlive = isSurvival ? correct : true;
   try{
-    await window.storage.set('room:'+state.roomCode+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:newScore, avatarId:state.avatarId, answeredQ: state.roomMeta.currentQuestion}), true);
+    await window.storage.set('room:'+state.roomCode+':players:'+state.myId, JSON.stringify({id:state.myId, name:state.myName, score:newScore, avatarId:state.avatarId, answeredQ: state.roomMeta.currentQuestion, alive: stillAlive}), true);
   }catch(e){ /* ignore */ }
 }
 
 function renderRoomResults(){
   if(roomTimerRAF) cancelAnimationFrame(roomTimerRAF);
+  const meta = state.roomMeta;
+  if(maybeShowEliminationOverlay(meta)) return;
+
+  const isSurvival = meta.mode === 'survival';
   const wrap = el('div','screen');
-  wrap.appendChild(el('div','result-emoji','🏁'));
+  wrap.appendChild(el('div','result-emoji', isSurvival ? '🔥' : '🏁'));
   wrap.appendChild(el('h2','center','¡Partida terminada!'));
 
+  let ranked;
+  if(isSurvival){
+    const survivors = state.roomPlayers.filter(p=>p.alive!==false);
+    const eliminated = state.roomPlayers.filter(p=>p.alive===false).sort((a,b)=>b.score-a.score);
+    ranked = survivors.concat(eliminated);
+    if(survivors.length===1){
+      const winnerCard = el('div','card center');
+      winnerCard.style.borderColor = 'rgba(255,216,77,0.5)';
+      winnerCard.appendChild(el('div','', '<span style="font-family:\'Baloo 2\';font-weight:800;font-size:1.3rem;color:#FFD84D;">🏆 ¡'+survivors[0].name+' sobrevivió!</span>'));
+      wrap.appendChild(winnerCard);
+    } else if(survivors.length===0){
+      wrap.appendChild(el('div','muted','Todos fueron eliminados. ¡Nadie sobrevivió!'));
+    }
+  } else {
+    ranked = state.roomPlayers.slice().sort((a,b)=>b.score-a.score);
+  }
+
   const card = el('div','card');
-  card.appendChild(el('h3','','Marcador final'));
+  card.appendChild(el('h3','', isSurvival ? 'Resultado final' : 'Marcador final'));
   const list = el('div','');
   list.style.marginTop='10px';
-  const ranked = state.roomPlayers.slice().sort((a,b)=>b.score-a.score);
   ranked.forEach((p,i)=>{
     const row = el('div','player-row');
     const nameWrap = el('div','name');
-    const medal = i<3 ? ['🥇','🥈','🥉'][i] : null;
-    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    const isEliminated = isSurvival && p.alive===false;
+    const medal = isSurvival ? (i===0 && p.alive!==false ? '🏆' : null) : (i<3 ? ['🥇','🥈','🥉'][i] : null);
+    const rankClass = isSurvival ? (i===0 && p.alive!==false ? 'rank-1' : '') : (i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'');
     const av = renderAvatarEl(p, medal, rankClass);
     nameWrap.appendChild(av);
-    nameWrap.appendChild(document.createTextNode(p.name));
+    nameWrap.appendChild(document.createTextNode(p.name + (isEliminated ? ' 💀' : '')));
     row.appendChild(nameWrap);
     row.appendChild(el('div','pts', p.score+' pts'));
     list.appendChild(row);
@@ -2010,15 +2238,15 @@ function renderRoomResults(){
   if(state.isHost){
     const again = el('button','btn','🔁 Nueva partida (misma sala)');
     again.addEventListener('click', async ()=>{
-      const cat = state.roomMeta.category;
-      const subKey = state.roomMeta.subcategory;
-      const count = state.roomMeta.questions.length;
-      const questions = shuffle(pool(cat, subKey)).slice(0,count);
-      const resetMeta = {...state.roomMeta, status:'lobby', currentQuestion:-1, questionStartTime:null, questions};
+      const questions = meta.mode === 'survival'
+        ? shuffle(SURVIVAL_QUESTIONS).slice(0, meta.questions.length)
+        : shuffle(pool(meta.category, meta.subcategory)).slice(0, meta.questions.length);
+      const resetMeta = {...meta, status:'lobby', currentQuestion:-1, questionStartTime:null, questions, lastEliminated:[], lastEliminatedQ:-1};
       await window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(resetMeta), true);
       for(const p of state.roomPlayers){
-        await window.storage.set('room:'+state.roomCode+':players:'+p.id, JSON.stringify({...p, score:0}), true);
+        await window.storage.set('room:'+state.roomCode+':players:'+p.id, JSON.stringify({...p, score:0, alive:true}), true);
       }
+      state.survivalOverlayShownForQ = null;
       pollRoom();
     });
     wrap.appendChild(again);
@@ -2029,7 +2257,9 @@ function renderRoomResults(){
   wrap.appendChild(home);
 
   app.appendChild(wrap);
-  const winner = state.roomPlayers.slice().sort((a,b)=>b.score-a.score)[0];
+  const winner = isSurvival
+    ? (ranked.length && ranked[0].alive!==false ? ranked[0] : null)
+    : state.roomPlayers.slice().sort((a,b)=>b.score-a.score)[0];
   if(winner && winner.id===state.myId) burstConfetti();
 }
 
