@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Minijuegos: El Consejo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!--
+  =====================================================================
+  CONFIGURACIÓN NECESARIA ANTES DE USAR (léelo, es rápido):
+  1. Ve a https://console.firebase.google.com y crea un proyecto gratis.
+  2. Dentro del proyecto: "Compilación" > "Realtime Database" > "Crear
+     base de datos" > empieza en "modo de prueba" (test mode).
+  3. Ve a "Configuración del proyecto" (el engranaje) > en la sección
+     "Tus apps" crea una app web (ícono </>) y copia el objeto
+     firebaseConfig que te da.
+  4. Pega ese objeto reemplazando el que está más abajo en
+     <script> const firebaseConfig = { ... } </script>.
+  5. Sube este archivo .html a tu hosting. Cada jugador entra desde su
+     propio celular, crea o se une a una sala con un código, y todos
+     se sincronizan en tiempo real a través de Firebase.
+  =====================================================================
+-->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<style>
+  :root {
+    --bg-deep: #170F2E;
+    --bg-panel: #241946;
+    --bg-panel-2: #2E2158;
+    --ink: #0F0A1F;
+    --pink: #FF3E9A;
+    --lime: #C6FF3D;
+    --cyan: #34E4C2;
+    --orange: #FF7A3D;
+    --cream: #FFF6EA;
+    --muted: #A79BC9;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg-deep);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(255,62,154,0.16), transparent 40%),
+      radial-gradient(circle at 85% 0%, rgba(52,228,194,0.14), transparent 38%),
+      radial-gradient(circle at 50% 100%, rgba(198,255,61,0.08), transparent 45%);
+    color: var(--cream);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+  }
+  .display { font-family: 'Baloo 2', sans-serif; }
+  .screen { max-width: 1024px; margin: 0 auto; padding: 40px 20px 60px; }
+  .screen.narrow { max-width: 460px; }
+  .hidden { display: none !important; }
+
+  header.home-header { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; margin-bottom: 40px; }
+  .seal-wrap { width: 110px; height: 110px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .seal-spikes { position: absolute; inset: 0; background: linear-gradient(135deg, var(--pink), var(--orange)); animation: seal-rotate 22s linear infinite; }
+  .seal-ring { position: absolute; inset: 0; animation: seal-rotate 40s linear infinite; }
+  .seal-center { position: relative; width: 56px; height: 56px; border-radius: 999px; background: var(--cream); border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  @media (prefers-reduced-motion: reduce) { .seal-spikes, .seal-ring { animation: none; } }
+  @keyframes seal-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .eyebrow { letter-spacing: 0.25em; font-size: 12px; font-weight: 700; color: var(--cyan); margin: 0 0 4px; }
+  h1.title { font-size: 46px; font-weight: 800; margin: 0; line-height: 1.05; }
+  .tagline { max-width: 420px; color: var(--muted); font-size: 15px; margin: 4px auto 0; }
+
+  /* Profile bar */
+  .profile-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 16px; margin-bottom: 28px; background: var(--bg-panel);
+    border: 3px solid var(--ink); border-radius: 18px;
+  }
+  .profile-left { display: flex; align-items: center; gap: 12px; }
+  .profile-avatar { width: 42px; height: 42px; border-radius: 999px; background: var(--bg-panel-2); border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .profile-name { font-weight: 800; font-family: 'Baloo 2', sans-serif; font-size: 15px; }
+  .profile-sub { font-size: 11px; color: var(--muted); }
+  .link-btn { font-family: 'Baloo 2', sans-serif; background: none; border: none; color: var(--lime); font-weight: 700; font-size: 13px; cursor: pointer; }
+
+  .profile-edit { margin-top: 14px; padding-top: 14px; border-top: 2px dashed var(--bg-panel-2); }
+  .profile-edit input[type=text] {
+    font-family: 'Nunito', sans-serif; width: 100%; padding: 10px 12px; border-radius: 12px;
+    border: 3px solid var(--ink); background: transparent; color: var(--cream); font-size: 14px; margin-bottom: 12px; outline: none;
+  }
+  .avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 14px; }
+  .avatar-choice {
+    aspect-ratio: 1; border-radius: 12px; border: 3px solid var(--ink); background: var(--bg-panel-2);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;
+  }
+  .avatar-choice.selected { background: var(--lime); }
+
+  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .section-head h2 { font-size: 20px; font-weight: 700; margin: 0; }
+  .section-head .rule { flex: 1; height: 3px; border-radius: 999px; background: var(--bg-panel); }
+
+  .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+  .sticker { border: 3px solid var(--ink); border-radius: 22px; box-shadow: 6px 6px 0 var(--shadow-color, var(--ink)); transition: transform .15s ease, box-shadow .15s ease; }
+  .sticker.interactive:hover { transform: translate(-2px,-2px); box-shadow: 8px 8px 0 var(--shadow-color, var(--ink)); }
+  .sticker.interactive:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--shadow-color, var(--ink)); }
+
+  .card { padding: 20px; background: var(--bg-panel-2); display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+  .card.locked { filter: saturate(.35); opacity: .55; }
+  .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .tag-pill { font-family: 'Baloo 2', sans-serif; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; color: var(--ink); }
+  .card-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .card-title-row h3 { font-size: 24px; font-weight: 700; margin: 0; line-height: 1; }
+  .card p.desc { font-size: 14px; color: var(--muted); margin: 0; }
+
+  .btn { font-family: 'Baloo 2', sans-serif; margin-top: 18px; width: 100%; border-radius: 12px; border: 3px solid var(--ink); padding: 10px 0; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .btn:active { transform: translateY(2px); }
+  .btn.disabled { cursor: not-allowed; opacity: .5; }
+  .btn.disabled:active { transform: none; }
+  .btn.ghost { background: transparent; color: var(--cream); }
+
+  .how { margin-top: 48px; padding: 22px; background: var(--bg-panel); }
+  .how h3 { font-size: 17px; font-weight: 700; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+  .how-grid { display: grid; grid-template-columns: 1fr; gap: 14px; font-size: 14px; color: var(--muted); }
+  @media (min-width: 768px) { .how-grid { grid-template-columns: 1fr 1fr 1fr; } }
+  .how-grid b { font-family: 'Baloo 2', sans-serif; }
+
+  .back-btn { font-family: 'Baloo 2', sans-serif; display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; color: var(--muted); font-weight: 700; font-size: 14px; padding: 0; margin-bottom: 28px; }
+  .lobby-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .lobby-title-row h1 { font-size: 28px; font-weight: 800; margin: 0; }
+  .lobby-sub { font-size: 14px; color: var(--muted); margin: 0 0 28px; }
+  .lobby-card { padding: 20px; background: var(--bg-panel-2); margin-bottom: 20px; }
+  .lobby-card h2 { font-family: 'Baloo 2', sans-serif; font-size: 18px; font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+  .lobby-card p { font-size: 14px; color: var(--muted); margin: 0 0 16px; }
+  input.code-input {
+    font-family: 'Baloo 2', sans-serif; width: 100%; text-align: center; letter-spacing: .3em; font-size: 18px; font-weight: 700;
+    border-radius: 12px; border: 3px solid var(--ink); padding: 10px 0; margin-bottom: 16px; background: transparent; color: var(--cream); outline: none; text-transform: uppercase;
+  }
+  input.code-input::placeholder { color: var(--muted); letter-spacing: .2em; }
+  .foot-note { font-size: 12px; text-align: center; color: var(--muted); margin-top: 28px; }
+  .error-note { font-size: 13px; color: var(--orange); text-align: center; margin: -6px 0 16px; font-weight: 700; }
+
+  /* Room / lobby-in-progress */
+  .room-code-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-panel-2); border: 3px solid var(--ink); border-radius: 14px; padding: 8px 16px; font-family: 'Baloo 2', sans-serif; font-weight: 800; letter-spacing: .2em; font-size: 20px; color: var(--lime); }
+  .player-list { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 20px 0; }
+  .player-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-panel-2); border: 3px solid var(--ink); border-radius: 14px; }
+  .player-row .av { width: 34px; height: 34px; border-radius: 999px; background: var(--bg-panel); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .player-row .nm { font-weight: 700; flex: 1; }
+  .host-tag { font-size: 10px; font-family: 'Baloo 2', sans-serif; background: var(--pink); color: var(--ink); padding: 3px 8px; border-radius: 999px; font-weight: 700; }
+  .waiting-note { text-align: center; font-size: 14px; color: var(--muted); margin-top: 16px; }
+
+  /* Question screen */
+  .question-card { padding: 28px 22px; background: var(--bg-panel-2); text-align: center; }
+  .category-pill { display: inline-block; font-family: 'Baloo 2', sans-serif; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 999px; background: var(--cyan); color: var(--ink); margin-bottom: 16px; }
+  .question-text { font-family: 'Baloo 2', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.3; }
+  .question-hint { font-size: 13px; color: var(--muted); margin-top: 16px; }
+
+  /* Voting */
+  .vote-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-panel-2); border: 3px solid var(--ink); border-radius: 14px; cursor: pointer; }
+  .vote-row.selected { background: var(--pink); }
+  .vote-row.selected .nm, .vote-row.selected .av { color: var(--ink); }
+
+  /* Reveal */
+  .reveal-badge { text-align: center; font-family: 'Baloo 2', sans-serif; font-size: 20px; font-weight: 800; padding: 14px; border-radius: 16px; border: 3px solid var(--ink); margin-bottom: 20px; }
+  .reveal-badge.impostor-caught { background: var(--lime); color: var(--ink); }
+  .reveal-badge.impostor-escaped { background: var(--orange); color: var(--ink); }
+  .qa-compare { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+  @media (min-width: 640px) { .qa-compare { grid-template-columns: 1fr 1fr; } }
+  .qa-box { padding: 16px; border-radius: 16px; border: 3px solid var(--ink); background: var(--bg-panel-2); font-size: 14px; }
+  .qa-box .lbl { font-family: 'Baloo 2', sans-serif; font-size: 12px; font-weight: 700; margin-bottom: 6px; display: block; }
+
+  svg.icon { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ===================== HOME SCREEN ===================== -->
+<div id="home-screen" class="screen">
+  <header class="home-header">
+    <div class="seal-wrap">
+      <div class="seal-spikes" id="seal-spikes"></div>
+      <svg class="seal-ring" viewBox="0 0 100 100" width="110" height="110">
+        <path id="sealCircle" d="M 50,50 m -33,0 a 33,33 0 1,1 66,0 a 33,33 0 1,1 -66,0" fill="none" />
+        <text fill="#0F0A1F" font-size="7.2" font-family="Baloo 2, sans-serif" font-weight="700" letter-spacing="2">
+          <textPath href="#sealCircle" startoffset="0%">EL CONSEJO • EL CONSEJO •</textPath>
+        </text>
+      </svg>
+      <div class="seal-center">👁️</div>
+    </div>
+    <div>
+      <p class="eyebrow display">MINIJUEGOS</p>
+      <h1 class="title display">EL CONSEJO</h1>
+    </div>
+    <p class="tagline">Todos responden la misma pregunta. Uno miente. El consejo decide quién.</p>
+  </header>
+
+  <!-- Perfil -->
+  <div class="profile-bar">
+    <div class="profile-left">
+      <div class="profile-avatar" id="profile-avatar-display">🦊</div>
+      <div>
+        <div class="profile-name" id="profile-name-display">Jugador</div>
+        <div class="profile-sub">Este es tu nombre en las salas</div>
+      </div>
+    </div>
+    <button class="link-btn display" onclick="toggleProfileEdit()">EDITAR</button>
+  </div>
+  <div id="profile-edit" class="profile-edit hidden" style="margin-top:-16px; margin-bottom: 28px; background: var(--bg-panel); border: 3px solid var(--ink); border-top: none; border-radius: 0 0 18px 18px; padding: 16px;">
+    <input type="text" id="profile-name-input" maxlength="16" placeholder="Tu nombre">
+    <div class="avatar-grid" id="avatar-grid"></div>
+    <button class="btn display" style="background: var(--lime); color: var(--ink); margin-top:0;" onclick="saveProfile()">GUARDAR PERFIL</button>
+  </div>
+
+  <div class="section-head">
+    <h2 class="display">ELIGE TU JUEGO</h2>
+    <div class="rule"></div>
+  </div>
+
+  <div class="grid">
+    <div class="sticker interactive" style="--shadow-color: var(--pink);">
+      <div class="card">
+        <div>
+          <div class="card-top">
+            <span class="tag-pill" style="background: var(--pink);">1 espía entre todos</span>
+            <span style="font-size:20px;">🎭</span>
+          </div>
+          <div class="card-title-row">
+            <span style="font-size:20px;">🕵️</span>
+            <h3 class="display">El Mentiroso</h3>
+          </div>
+          <p class="desc">Todos reciben la misma pregunta... menos uno. Descubran al espía antes de que se salga con la suya.</p>
+        </div>
+        <button class="btn display" style="background: var(--pink); color: var(--ink);" onclick="showScreen('lobby')">JUGAR</button>
+      </div>
+    </div>
+
+    <div class="sticker" style="--shadow-color: var(--cyan);">
+      <div class="card locked">
+        <div>
+          <div class="card-top"><span class="tag-pill" style="background: var(--cyan);">Próximo juego</span><span style="font-size:20px;">🔒</span></div>
+          <div class="card-title-row"><h3 class="display">???</h3></div>
+          <p class="desc">El consejo sigue reunido. Este minijuego llega pronto.</p>
+        </div>
+        <button class="btn disabled display" style="border-color: var(--ink); color: var(--muted);" disabled>MUY PRONTO</button>
+      </div>
+    </div>
+
+    <div class="sticker" style="--shadow-color: var(--lime);">
+      <div class="card locked">
+        <div>
+          <div class="card-top"><span class="tag-pill" style="background: var(--lime);">Próximo juego</span><span style="font-size:20px;">🔒</span></div>
+          <div class="card-title-row"><h3 class="display">???</h3></div>
+          <p class="desc">Algo se está tramando aquí. Vuelve luego.</p>
+        </div>
+        <button class="btn disabled display" style="border-color: var(--ink); color: var(--muted);" disabled>MUY PRONTO</button>
+      </div>
+    </div>
+
+    <div class="sticker" style="--shadow-color: var(--orange);">
+      <div class="card locked">
+        <div>
+          <div class="card-top"><span class="tag-pill" style="background: var(--orange);">Próximo juego</span><span style="font-size:20px;">🔒</span></div>
+          <div class="card-title-row"><h3 class="display">???</h3></div>
+          <p class="desc">Todavía en secreto, como todo buen mentiroso.</p>
+        </div>
+        <button class="btn disabled display" style="border-color: var(--ink); color: var(--muted);" disabled>MUY PRONTO</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="how sticker" style="--shadow-color: var(--bg-panel-2);">
+    <h3 class="display">👥 Cómo funciona</h3>
+    <div class="how-grid">
+      <div><b style="color: var(--pink);">01</b> Creen o únanse a una sala desde su celular.</div>
+      <div><b style="color: var(--cyan);">02</b> Todos reciben una pregunta parecida, menos el espía.</div>
+      <div><b style="color: var(--lime);">03</b> Respondan, sospechen y voten quién miente.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LOBBY (crear/unirse) ===================== -->
+<div id="lobby-screen" class="screen narrow hidden">
+  <button class="back-btn display" onclick="showScreen('home')">← VOLVER</button>
+  <div class="lobby-title-row"><span style="font-size:24px;">🕵️</span><h1 class="display">El Mentiroso</h1></div>
+  <p class="lobby-sub">Reúnanse desde sus propios celulares, conectados a la misma sala.</p>
+
+  <p id="lobby-error" class="error-note hidden"></p>
+
+  <div class="lobby-card sticker" style="--shadow-color: var(--lime);">
+    <h2>➕ Crear sala</h2>
+    <p>Serás el anfitrión. Te daremos un código para compartir.</p>
+    <button class="btn display" style="background: var(--lime); color: var(--ink);" onclick="createRoom()">CREAR SALA</button>
+  </div>
+
+  <div class="lobby-card sticker" style="--shadow-color: var(--cyan);">
+    <h2>🔑 Unirse a sala</h2>
+    <input type="text" class="code-input" id="room-code-input" maxlength="5" placeholder="CÓDIGO" oninput="this.value=this.value.toUpperCase();document.getElementById('join-btn').disabled=this.value.length<3;">
+    <button class="btn disabled display" id="join-btn" style="background: var(--cyan); color: var(--ink);" disabled onclick="joinRoom()">UNIRME</button>
+  </div>
+
+  <p class="foot-note">La sala funciona en línea: cada jugador entra desde su propio celular.</p>
+</div>
+
+<!-- ===================== ROOM (esperando jugadores) ===================== -->
+<div id="room-screen" class="screen narrow hidden">
+  <button class="back-btn display" onclick="leaveRoom()">← SALIR DE LA SALA</button>
+  <div style="text-align:center; margin-bottom: 22px;">
+    <p class="eyebrow display" style="color: var(--muted);">CÓDIGO DE SALA</p>
+    <span class="room-code-badge" id="room-code-badge">-----</span>
+  </div>
+  <div class="section-head"><h2 class="display">JUGADORES</h2><div class="rule"></div></div>
+  <div class="player-list" id="player-list"></div>
+  <button class="btn hidden display" id="start-game-btn" style="background: var(--pink); color: var(--ink);" onclick="startGame()">INICIAR PARTIDA</button>
+  <p class="waiting-note" id="waiting-note">Esperando jugadores... (mínimo 3 para empezar)</p>
+</div>
+
+<!-- ===================== QUESTION SCREEN ===================== -->
+<div id="question-screen" class="screen narrow hidden">
+  <div class="sticker question-card" style="--shadow-color: var(--pink);">
+    <span class="category-pill display" id="q-category">Categoría</span>
+    <p class="question-text" id="q-text">Cargando...</p>
+    <p class="question-hint">Respondan por turnos, en voz alta. Nadie diga su pregunta completa.</p>
+  </div>
+  <button class="btn hidden display" id="to-voting-btn" style="background: var(--orange); color: var(--ink);" onclick="goToVoting()">PASAR A VOTACIÓN</button>
+  <p class="waiting-note" id="q-waiting-note">Solo el anfitrión puede pasar a la votación.</p>
+</div>
+
+<!-- ===================== VOTING SCREEN ===================== -->
+<div id="voting-screen" class="screen narrow hidden">
+  <div class="section-head"><h2 class="display">¿QUIÉN MIENTE?</h2><div class="rule"></div></div>
+  <div class="player-list" id="vote-list"></div>
+  <button class="btn hidden display" id="reveal-btn" style="background: var(--lime); color: var(--ink);" onclick="revealResult()">REVELAR RESULTADO</button>
+  <p class="waiting-note" id="vote-waiting-note">Toca a quien creas que es el espía.</p>
+</div>
+
+<!-- ===================== REVEAL SCREEN ===================== -->
+<div id="reveal-screen" class="screen narrow hidden">
+  <div id="reveal-badge" class="reveal-badge display">-</div>
+  <div class="qa-compare">
+    <div class="qa-box"><span class="lbl display" style="color: var(--cyan);">PREGUNTA DE TODOS</span><span id="reveal-main-q"></span></div>
+    <div class="qa-box"><span class="lbl display" style="color: var(--pink);">PREGUNTA DEL ESPÍA</span><span id="reveal-spy-q"></span></div>
+  </div>
+  <div class="section-head"><h2 class="display">VOTOS</h2><div class="rule"></div></div>
+  <div class="player-list" id="reveal-vote-list"></div>
+  <button class="btn hidden display" id="next-round-btn" style="background: var(--pink); color: var(--ink);" onclick="nextRound()">OTRA RONDA</button>
+  <button class="btn ghost display ghost-border" style="border-color: var(--ink); margin-top:10px;" onclick="leaveRoom()">SALIR DE LA SALA</button>
+</div>
+
+<script>
+/* =====================================================================
+   1) CONFIGURACIÓN DE FIREBASE — reemplaza esto con tu propio proyecto
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyBY0MRiBzf9d1CuEfVXCkQKdhjw_xMMd84",
+  authDomain: "el-consejo-b382c.firebaseapp.com",
+  databaseURL: "https://el-consejo-b382c-default-rtdb.firebaseio.com",
+  projectId: "el-consejo-b382c",
+  storageBucket: "el-consejo-b382c.firebasestorage.app",
+  messagingSenderId: "644155531992",
+  appId: "1:644155531992:web:dec9e1b13e55cfff1badad"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* =====================================================================
+   2) BANCO DE 100 PREGUNTAS — 10 categorías x 10 pares (pregunta
+   principal + pregunta del espía, parecidas pero no iguales)
+   ===================================================================== */
+const QUESTION_BANK = [
+  // MÚSICA
+  {cat:"Música", main:"¿Cuál es tu canción favorita para cantar en la ducha?", spy:"¿Cuál es tu canción favorita para bailar?"},
+  {cat:"Música", main:"¿Qué canción no puede faltar en una fiesta?", spy:"¿Qué canción no puede faltar en un roadtrip?"},
+  {cat:"Música", main:"¿Qué artista escuchabas más de adolescente?", spy:"¿Qué artista escuchas más ahora?"},
+  {cat:"Música", main:"¿Qué género musical odias?", spy:"¿Qué género musical te aburre?"},
+  {cat:"Música", main:"¿Cuál es el concierto que te gustaría haber visto?", spy:"¿Cuál es el concierto al que sí fuiste y te encantó?"},
+  {cat:"Música", main:"¿Qué canción te hace llorar?", spy:"¿Qué canción te pone nostálgico?"},
+  {cat:"Música", main:"¿Cuál es tu instrumento musical favorito?", spy:"¿Qué instrumento te gustaría aprender a tocar?"},
+  {cat:"Música", main:"¿Qué canción cantarías en un karaoke sin pena?", spy:"¿Qué canción cantarías en un karaoke con mucha pena?"},
+  {cat:"Música", main:"¿Cuál es la canción más pegajosa que conoces?", spy:"¿Cuál es la canción más molesta que conoces?"},
+  {cat:"Música", main:"¿Qué álbum escuchas de principio a fin?", spy:"¿Qué álbum escuchas solo por una canción?"},
+  // ANIME
+  {cat:"Anime", main:"¿Cuál es tu anime favorito de todos los tiempos?", spy:"¿Cuál es el anime que más recomendarías empezar?"},
+  {cat:"Anime", main:"¿Qué personaje de anime te gustaría ser?", spy:"¿Qué personaje de anime te da miedo?"},
+  {cat:"Anime", main:"¿Cuál es el opening de anime que más te gusta?", spy:"¿Cuál es el ending de anime que más te gusta?"},
+  {cat:"Anime", main:"¿Qué anime te hizo llorar?", spy:"¿Qué anime te hizo reír más?"},
+  {cat:"Anime", main:"¿Cuál villano de anime es tu favorito?", spy:"¿Cuál protagonista de anime es tu favorito?"},
+  {cat:"Anime", main:"¿Qué anime crees que está sobrevalorado?", spy:"¿Qué anime crees que está subestimado?"},
+  {cat:"Anime", main:"¿Qué poder de un anime te gustaría tener?", spy:"¿Qué poder de un anime NO te gustaría tener?"},
+  {cat:"Anime", main:"¿Cuál es el arco de anime más largo que has visto?", spy:"¿Cuál es el anime más corto que has visto?"},
+  {cat:"Anime", main:"¿Qué anime dejaste a la mitad?", spy:"¿Qué anime terminaste en un solo día?"},
+  {cat:"Anime", main:"¿Qué crossover de anime te gustaría ver?", spy:"¿Qué anime te gustaría que tuviera una película?"},
+  // CULTURA GENERAL
+  {cat:"Cultura general", main:"¿Cuál es la capital que siempre se te olvida?", spy:"¿Cuál es el país que más te gustaría visitar?"},
+  {cat:"Cultura general", main:"¿Qué idioma te gustaría hablar perfectamente?", spy:"¿Qué idioma crees que es el más difícil?"},
+  {cat:"Cultura general", main:"¿Cuál es un dato random que sabes y nadie más sabe?", spy:"¿Cuál es un dato random que aprendiste esta semana?"},
+  {cat:"Cultura general", main:"¿Qué invento cambió más a la humanidad?", spy:"¿Qué invento te gustaría que no existiera?"},
+  {cat:"Cultura general", main:"¿Qué materia se te dificultaba más en la escuela?", spy:"¿Cuál era tu materia favorita en la escuela?"},
+  {cat:"Cultura general", main:"¿Qué animal te parece el más inteligente?", spy:"¿Qué animal te parece el más peligroso?"},
+  {cat:"Cultura general", main:"¿Cuál es el planeta que más te llama la atención?", spy:"¿Cuál es el fenómeno natural que más te impresiona?"},
+  {cat:"Cultura general", main:"¿Qué libro deberían leer todos al menos una vez?", spy:"¿Qué libro no pudiste terminar de leer?"},
+  {cat:"Cultura general", main:"¿Cuál es la palabra más rara que conoces?", spy:"¿Cuál es la palabra que más usas sin darte cuenta?"},
+  {cat:"Cultura general", main:"¿Qué profesión admiras más?", spy:"¿Qué profesión no podrías hacer nunca?"},
+  // HISTORIA
+  {cat:"Historia", main:"¿Qué época de la historia te gustaría visitar?", spy:"¿Qué época de la historia NO te gustaría vivir?"},
+  {cat:"Historia", main:"¿Qué personaje histórico te gustaría conocer?", spy:"¿Qué personaje histórico crees que fue el más malvado?"},
+  {cat:"Historia", main:"¿Qué evento histórico te parece el más importante?", spy:"¿Qué evento histórico crees que cambió todo para peor?"},
+  {cat:"Historia", main:"¿Qué civilización antigua te parece más interesante?", spy:"¿Qué civilización antigua te gustaría que aún existiera?"},
+  {cat:"Historia", main:"¿Qué invento de la historia te parece el más genial?", spy:"¿Qué invento de la historia crees que llegó demasiado tarde?"},
+  {cat:"Historia", main:"¿Qué guerra de la historia estudiaste más a fondo?", spy:"¿Qué guerra de la historia te gustaría que nunca hubiera pasado?"},
+  {cat:"Historia", main:"¿Cuál es el mito o leyenda que más te gusta?", spy:"¿Cuál es el misterio histórico que más te intriga?"},
+  {cat:"Historia", main:"¿Qué imperio de la historia te hubiera gustado gobernar?", spy:"¿Qué imperio de la historia crees que fue el más injusto?"},
+  {cat:"Historia", main:"¿Qué descubrimiento histórico te parece el más importante?", spy:"¿Qué descubrimiento histórico crees que se adelantó a su época?"},
+  {cat:"Historia", main:"¿A qué figura histórica le harías una pregunta si pudieras?", spy:"¿A qué figura histórica NUNCA le harías una pregunta?"},
+  // CINE Y TV
+  {cat:"Cine y TV", main:"¿Cuál es la película que has visto más veces?", spy:"¿Cuál es la serie que has visto más veces?"},
+  {cat:"Cine y TV", main:"¿Qué personaje de película te gustaría ser?", spy:"¿Qué villano de película te cae mejor?"},
+  {cat:"Cine y TV", main:"¿Qué película te hizo llorar?", spy:"¿Qué película te dio más miedo?"},
+  {cat:"Cine y TV", main:"¿Cuál final de serie te decepcionó más?", spy:"¿Cuál final de serie te sorprendió más?"},
+  {cat:"Cine y TV", main:"¿Qué actor o actriz crees que es el mejor de su generación?", spy:"¿Qué actor o actriz crees que está sobrevalorado?"},
+  {cat:"Cine y TV", main:"¿Qué serie dejaste a medias?", spy:"¿Qué serie terminaste en un fin de semana?"},
+  {cat:"Cine y TV", main:"¿Cuál es la peor película que has visto?", spy:"¿Cuál es la película más rara que has visto?"},
+  {cat:"Cine y TV", main:"¿Qué remake te gustaría que hicieran?", spy:"¿Qué película NUNCA debería tener remake?"},
+  {cat:"Cine y TV", main:"¿Qué género de películas prefieres?", spy:"¿Qué género de películas evitas siempre?"},
+  {cat:"Cine y TV", main:"¿Cuál es tu escena de película favorita?", spy:"¿Cuál es la escena de película que más te asustó?"},
+  // COMIDA
+  {cat:"Comida", main:"¿Cuál es tu comida favorita?", spy:"¿Cuál es la comida que menos te gusta?"},
+  {cat:"Comida", main:"¿Qué plato dominicano no puede faltar en tu mesa?", spy:"¿Qué plato dominicano podrías comer todos los días?"},
+  {cat:"Comida", main:"¿Qué comida rara te gustaría probar?", spy:"¿Qué comida jamás probarías?"},
+  {cat:"Comida", main:"¿Cuál es tu postre favorito?", spy:"¿Cuál es tu snack favorito?"},
+  {cat:"Comida", main:"¿Qué comida cocinas mejor?", spy:"¿Qué comida se te da fatal cocinar?"},
+  {cat:"Comida", main:"¿Qué comida pides siempre que sales?", spy:"¿Qué comida solo comes en ocasiones especiales?"},
+  {cat:"Comida", main:"¿Cuál es la combinación de comida más rara que te gusta?", spy:"¿Cuál es la combinación de comida que odias?"},
+  {cat:"Comida", main:"¿Qué bebida no puede faltar en tu nevera?", spy:"¿Qué bebida odias?"},
+  {cat:"Comida", main:"¿Qué comida te recuerda a tu infancia?", spy:"¿Qué comida asocias con una fecha especial?"},
+  {cat:"Comida", main:"¿Cuál es el restaurante al que siempre vuelves?", spy:"¿Cuál es el restaurante que te gustaría probar?"},
+  // DEPORTES
+  {cat:"Deportes", main:"¿Cuál es tu deporte favorito para ver?", spy:"¿Cuál es tu deporte favorito para jugar?"},
+  {cat:"Deportes", main:"¿Qué equipo apoyas siempre?", spy:"¿Qué equipo odias?"},
+  {cat:"Deportes", main:"¿Qué deporte te gustaría intentar al menos una vez?", spy:"¿Qué deporte crees que nunca podrías practicar?"},
+  {cat:"Deportes", main:"¿Cuál es el mejor atleta de la historia según tú?", spy:"¿Cuál es el atleta más sobrevalorado según tú?"},
+  {cat:"Deportes", main:"¿Qué deporte crees que debería ser olímpico?", spy:"¿Qué deporte crees que es aburrido de ver?"},
+  {cat:"Deportes", main:"¿Cuál fue el mejor partido que has visto?", spy:"¿Cuál fue el peor partido que has visto?"},
+  {cat:"Deportes", main:"¿Qué deporte practicaste de niño?", spy:"¿Qué deporte te gustaría que tus hijos practicaran?"},
+  {cat:"Deportes", main:"¿Qué país crees que domina el deporte en general?", spy:"¿Qué país crees que está subestimado en el deporte?"},
+  {cat:"Deportes", main:"¿Qué récord deportivo te parece imposible de romper?", spy:"¿Qué récord deportivo te gustaría ver roto?"},
+  {cat:"Deportes", main:"¿Qué deporte extremo te llama la atención?", spy:"¿Qué deporte extremo jamás harías?"},
+  // TECNOLOGÍA
+  {cat:"Tecnología", main:"¿Qué app usas más en tu celular?", spy:"¿Qué app crees que es una pérdida de tiempo?"},
+  {cat:"Tecnología", main:"¿Qué avance tecnológico te parece el más útil?", spy:"¿Qué avance tecnológico te parece innecesario?"},
+  {cat:"Tecnología", main:"¿Qué red social prefieres?", spy:"¿Qué red social eliminarías si pudieras?"},
+  {cat:"Tecnología", main:"¿Qué gadget te gustaría tener?", spy:"¿Qué gadget crees que es una exageración?"},
+  {cat:"Tecnología", main:"¿Qué videojuego jugaste más en tu vida?", spy:"¿Qué videojuego te gustaría jugar pero nunca has probado?"},
+  {cat:"Tecnología", main:"¿Qué tan seguido cambias de celular?", spy:"¿Qué tan seguido borras apps de tu celular?"},
+  {cat:"Tecnología", main:"¿Crees que la inteligencia artificial ayuda más de lo que perjudica?", spy:"¿Crees que la inteligencia artificial da más miedo que ilusión?"},
+  {cat:"Tecnología", main:"¿Qué serie o película sobre tecnología te gusta?", spy:"¿Qué avance tecnológico crees que llegará en 10 años?"},
+  {cat:"Tecnología", main:"¿Cuál fue el primer celular que tuviste?", spy:"¿Cuál te gustaría que fuera tu próximo celular?"},
+  {cat:"Tecnología", main:"¿Qué tanto confías en dejar tus datos en internet?", spy:"¿Qué tanto revisas los permisos de una app antes de instalarla?"},
+  // PERSONALES / HIPOTÉTICAS
+  {cat:"Personales", main:"¿Qué harías si te ganaras la lotería?", spy:"¿Qué harías si perdieras todo tu dinero?"},
+  {cat:"Personales", main:"¿Qué superpoder te gustaría tener?", spy:"¿Qué superpoder NO te gustaría tener?"},
+  {cat:"Personales", main:"¿A qué país te mudarías sin pensarlo?", spy:"¿A qué país no te mudarías nunca?"},
+  {cat:"Personales", main:"¿Qué harías primero si fueras invisible por un día?", spy:"¿Qué harías primero si pudieras leer mentes por un día?"},
+  {cat:"Personales", main:"¿Qué le dirías a tu yo de hace 10 años?", spy:"¿Qué le preguntarías a tu yo del futuro?"},
+  {cat:"Personales", main:"¿Cuál es tu mayor miedo?", spy:"¿Cuál es tu miedo más ridículo?"},
+  {cat:"Personales", main:"¿Qué trabajo harías gratis?", spy:"¿Qué trabajo nunca harías ni por mucho dinero?"},
+  {cat:"Personales", main:"¿Con quién te gustaría cambiar de vida por un día?", spy:"¿Con qué personaje ficticio te gustaría cambiar de vida?"},
+  {cat:"Personales", main:"¿Qué es lo más loco que has hecho por amor?", spy:"¿Qué es lo más loco que has hecho por una amistad?"},
+  {cat:"Personales", main:"¿Qué costumbre familiar te gustaría mantener siempre?", spy:"¿Qué costumbre familiar te gustaría cambiar?"},
+  // ALEATORIO / ABSURDAS
+  {cat:"Aleatorio", main:"Si fueras un animal, ¿cuál serías?", spy:"Si fueras un mueble, ¿cuál serías?"},
+  {cat:"Aleatorio", main:"¿Qué comerías si pudieras comer algo no comestible sin consecuencias?", spy:"¿Qué olor odioso te gustaría oler solo una vez?"},
+  {cat:"Aleatorio", main:"Si tu vida fuera una película, ¿qué género sería?", spy:"Si tu vida fuera una canción, ¿qué género sería?"},
+  {cat:"Aleatorio", main:"¿Qué objeto random llevarías a una isla desierta?", spy:"¿Qué persona random llevarías a una isla desierta?"},
+  {cat:"Aleatorio", main:"Si tuvieras el tamaño de una hormiga por un día, ¿qué harías?", spy:"Si fueras gigante por un día, ¿qué harías?"},
+  {cat:"Aleatorio", main:"¿Qué palabra inventarías que no existe pero debería?", spy:"¿Qué palabra existente eliminarías del diccionario?"},
+  {cat:"Aleatorio", main:"Si tuvieras que vivir en un videojuego, ¿cuál elegirías?", spy:"Si tuvieras que vivir en una película, ¿cuál elegirías?"},
+  {cat:"Aleatorio", main:"¿Cuál sería tu nombre artístico si fueras cantante?", spy:"¿Cuál sería el nombre de tu banda si tuvieras una?"},
+  {cat:"Aleatorio", main:"Si pudieras hablar con los animales, ¿a cuál le preguntarías algo primero?", spy:"Si los animales pudieran hablar, ¿cuál crees que sería el más grosero?"},
+  {cat:"Aleatorio", main:"¿Qué harías si te despertaras mañana siendo famoso?", spy:"¿Qué harías si te despertaras mañana sin que nadie te reconociera?"}
+];
+
+/* =====================================================================
+   2.5) ALMACENAMIENTO PERSISTENTE — recuerda nombre, avatar, tu ID de
+   jugador y la sala en la que estabas, para que si recargas la página
+   no pierdas tu identidad ni tengas que volver a escribir el código.
+   Nota: esto usa localStorage, que solo persiste de verdad una vez que
+   subas el archivo a tu propio hosting. Dentro de la vista previa de
+   Claude puede que no se guarde entre recargas, pero el juego funciona
+   igual (no se rompe nada).
+   ===================================================================== */
+const storage = (function () {
+  try {
+    localStorage.setItem("__mec_test__", "1");
+    localStorage.removeItem("__mec_test__");
+    return localStorage;
+  } catch (e) {
+    const mem = {};
+    return {
+      getItem: k => (k in mem ? mem[k] : null),
+      setItem: (k, v) => { mem[k] = v; },
+      removeItem: k => { delete mem[k]; }
+    };
+  }
+})();
+
+/* =====================================================================
+   2.6) SONIDITO DE CLIC — un "clic" sintetizado con Web Audio, sin
+   archivos externos. Suena cada vez que se toca un botón, avatar,
+   jugador o fila de votación.
+   ===================================================================== */
+let audioCtx = null;
+function playClickSound() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const ctx = audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(680, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.09);
+    gain.gain.setValueAtTime(0.16, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+  } catch (e) { /* el navegador no soporta audio; no pasa nada */ }
+}
+document.addEventListener("click", function (e) {
+  const el = e.target.closest("button, .avatar-choice, .vote-row, .link-btn, .player-row");
+  if (el && !el.disabled && !el.classList.contains("disabled")) playClickSound();
+});
+
+/* =====================================================================
+   3) PERFIL DEL JUGADOR (nombre + avatar en emoji, persistente)
+   ===================================================================== */
+const AVATAR_OPTIONS = ["🦊","🐼","🐸","🐵","🦁","🐯","🐨","🐷","🐧","🦄","🐙","🐲"];
+let profile = { name: "Jugador", avatar: "🦊" };
+try {
+  const savedProfile = JSON.parse(storage.getItem("mec_profile") || "null");
+  if (savedProfile && savedProfile.name && savedProfile.avatar) profile = savedProfile;
+} catch (e) { /* perfil guardado corrupto, se usa el de por defecto */ }
+
+function buildAvatarGrid() {
+  const grid = document.getElementById("avatar-grid");
+  grid.innerHTML = "";
+  AVATAR_OPTIONS.forEach(av => {
+    const el = document.createElement("div");
+    el.className = "avatar-choice" + (av === profile.avatar ? " selected" : "");
+    el.textContent = av;
+    el.onclick = () => {
+      profile.avatar = av;
+      buildAvatarGrid();
+    };
+    grid.appendChild(el);
+  });
+}
+
+function toggleProfileEdit() {
+  const panel = document.getElementById("profile-edit");
+  panel.classList.toggle("hidden");
+  document.getElementById("profile-name-input").value = profile.name;
+  buildAvatarGrid();
+}
+
+function saveProfile() {
+  const name = document.getElementById("profile-name-input").value.trim();
+  if (name) profile.name = name.slice(0, 16);
+  document.getElementById("profile-name-display").textContent = profile.name;
+  document.getElementById("profile-avatar-display").textContent = profile.avatar;
+  document.getElementById("profile-edit").classList.add("hidden");
+  storage.setItem("mec_profile", JSON.stringify(profile));
+  // Si ya estás en una sala, actualiza tu nombre/avatar ahí también
+  if (roomRef && currentRoomCode) {
+    roomRef.child("players/" + playerId).update({ name: profile.name, avatar: profile.avatar });
+  }
+}
+
+/* =====================================================================
+   4) NAVEGACIÓN ENTRE PANTALLAS
+   ===================================================================== */
+const SCREENS = ["home-screen","lobby-screen","room-screen","question-screen","voting-screen","reveal-screen"];
+function showScreen(id) {
+  SCREENS.forEach(s => document.getElementById(s).classList.toggle("hidden", s !== id + "-screen"));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+(function buildSeal() {
+  const spikes = 14, outer = 50, inner = 43, pts = [];
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const angle = (Math.PI / spikes) * i - Math.PI / 2;
+    pts.push((50 + r*Math.cos(angle)).toFixed(2) + "% " + (50 + r*Math.sin(angle)).toFixed(2) + "%");
+  }
+  document.getElementById("seal-spikes").style.clipPath = "polygon(" + pts.join(",") + ")";
+})();
+
+/* =====================================================================
+   5) LÓGICA DE SALAS (El Mentiroso) — sincronizada por Firebase
+   ===================================================================== */
+let playerId = storage.getItem("mec_playerId");
+if (!playerId) {
+  playerId = "p_" + Math.random().toString(36).slice(2, 10);
+  storage.setItem("mec_playerId", playerId);
+}
+let currentRoomCode = null;
+let roomRef = null;
+let isHost = false;
+
+function randomRoomCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function showLobbyError(msg) {
+  const el = document.getElementById("lobby-error");
+  el.textContent = msg;
+  el.classList.toggle("hidden", !msg);
+}
+
+function createRoom() {
+  showLobbyError("");
+  const code = randomRoomCode();
+  const initialData = {
+    host: playerId,
+    status: "lobby",
+    createdAt: Date.now(),
+    players: {
+      [playerId]: { name: profile.name, avatar: profile.avatar, isHost: true }
+    }
+  };
+  db.ref("rooms/" + code).set(initialData).then(() => {
+    enterRoom(code);
+  }).catch(err => showLobbyError("No se pudo crear la sala: " + err.message));
+}
+
+function joinRoom() {
+  showLobbyError("");
+  const code = document.getElementById("room-code-input").value.trim().toUpperCase();
+  if (code.length < 3) return;
+  const ref = db.ref("rooms/" + code);
+  ref.get().then(snap => {
+    if (!snap.exists()) {
+      showLobbyError("No existe una sala con ese código.");
+      return;
+    }
+    return ref.child("players/" + playerId).set({ name: profile.name, avatar: profile.avatar, isHost: false }).then(() => enterRoom(code));
+  }).catch(err => showLobbyError("Error al unirse: " + err.message));
+}
+
+function enterRoom(code) {
+  currentRoomCode = code;
+  document.getElementById("room-code-badge").textContent = code;
+  roomRef = db.ref("rooms/" + code);
+  roomRef.on("value", onRoomUpdate);
+  storage.setItem("mec_lastRoom", code);
+  showScreen("room");
+}
+
+function leaveRoom() {
+  if (roomRef) {
+    roomRef.off("value", onRoomUpdate);
+    roomRef.child("players/" + playerId).remove();
+  }
+  currentRoomCode = null;
+  roomRef = null;
+  isHost = false;
+  storage.removeItem("mec_lastRoom");
+  showScreen("home");
+}
+
+function onRoomUpdate(snapshot) {
+  const room = snapshot.val();
+  if (!room) {
+    // La sala ya no existe (por ejemplo, se cerró); olvida la reconexión.
+    storage.removeItem("mec_lastRoom");
+    showScreen("home");
+    return;
+  }
+
+  isHost = room.host === playerId;
+  const players = room.players || {};
+  const playerIds = Object.keys(players);
+
+  // Si por alguna razón ya no aparecemos en la lista de jugadores
+  // (por ejemplo, se recargó justo cuando el anfitrión creó la sala)
+  // y todavía estamos en la fase de espera, nos volvemos a agregar.
+  if (room.status === "lobby" && !players[playerId]) {
+    roomRef.child("players/" + playerId).set({ name: profile.name, avatar: profile.avatar, isHost: isHost });
+  }
+
+  if (room.status === "lobby") {
+    renderPlayerList(players);
+    document.getElementById("start-game-btn").classList.toggle("hidden", !(isHost && playerIds.length >= 3));
+    document.getElementById("waiting-note").textContent = playerIds.length >= 3
+      ? (isHost ? "Ya pueden empezar cuando quieras." : "Esperando a que el anfitrión inicie la partida...")
+      : "Esperando jugadores... (mínimo 3 para empezar)";
+    showScreen("room");
+  }
+
+  if (room.status === "playing") {
+    const myQuestion = playerId === room.impostorId ? room.spyQuestion : room.mainQuestion;
+    document.getElementById("q-category").textContent = room.category;
+    document.getElementById("q-text").textContent = myQuestion;
+    document.getElementById("to-voting-btn").classList.toggle("hidden", !isHost);
+    document.getElementById("q-waiting-note").classList.toggle("hidden", isHost);
+    showScreen("question");
+  }
+
+  if (room.status === "voting") {
+    renderVoteList(players, room.votes || {});
+    const allVoted = playerIds.length > 0 && playerIds.every(id => room.votes && room.votes[id]);
+    document.getElementById("reveal-btn").classList.toggle("hidden", !isHost);
+    document.getElementById("vote-waiting-note").textContent = allVoted ? "Todos votaron. El anfitrión puede revelar." : "Toca a quien creas que es el espía.";
+    showScreen("voting");
+  }
+
+  if (room.status === "reveal") {
+    renderReveal(room, players);
+    showScreen("reveal");
+  }
+}
+
+function renderPlayerList(players) {
+  const list = document.getElementById("player-list");
+  list.innerHTML = "";
+  Object.entries(players).forEach(([id, p]) => {
+    const row = document.createElement("div");
+    row.className = "player-row";
+    row.innerHTML = `<div class="av">${p.avatar}</div><div class="nm">${p.name}</div>${p.isHost ? '<span class="host-tag display">ANFITRIÓN</span>' : ''}`;
+    list.appendChild(row);
+  });
+}
+
+function startGame() {
+  if (!isHost || !currentRoomCode) return;
+  roomRef.child("players").get().then(snap => {
+    const players = snap.val() || {};
+    const ids = Object.keys(players);
+    if (ids.length < 3) return;
+    const pair = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
+    const impostorId = ids[Math.floor(Math.random() * ids.length)];
+    roomRef.update({
+      status: "playing",
+      category: pair.cat,
+      mainQuestion: pair.main,
+      spyQuestion: pair.spy,
+      impostorId: impostorId,
+      votes: null
+    });
+  });
+}
+
+function goToVoting() {
+  if (!isHost) return;
+  roomRef.update({ status: "voting", votes: null });
+}
+
+function renderVoteList(players, votes) {
+  const list = document.getElementById("vote-list");
+  list.innerHTML = "";
+  const myVote = votes[playerId];
+  Object.entries(players).forEach(([id, p]) => {
+    const row = document.createElement("div");
+    row.className = "vote-row" + (myVote === id ? " selected" : "");
+    row.innerHTML = `<div class="av">${p.avatar}</div><div class="nm">${p.name}</div>`;
+    row.onclick = () => roomRef.child("votes/" + playerId).set(id);
+    list.appendChild(row);
+  });
+}
+
+function revealResult() {
+  if (!isHost) return;
+  roomRef.update({ status: "reveal" });
+}
+
+function renderReveal(room, players) {
+  const votes = room.votes || {};
+  const tally = {};
+  Object.values(votes).forEach(votedId => { tally[votedId] = (tally[votedId] || 0) + 1; });
+
+  const impostor = players[room.impostorId];
+  const impostorVotes = tally[room.impostorId] || 0;
+  const totalVotes = Object.keys(votes).length;
+  const caught = totalVotes > 0 && impostorVotes > totalVotes / 2;
+
+  const badge = document.getElementById("reveal-badge");
+  badge.className = "reveal-badge display " + (caught ? "impostor-caught" : "impostor-escaped");
+  badge.textContent = (caught ? "✅ ATRAPARON AL ESPÍA: " : "🎭 EL ESPÍA SE ESCAPÓ: ") + (impostor ? impostor.name : "?");
+
+  document.getElementById("reveal-main-q").textContent = room.mainQuestion;
+  document.getElementById("reveal-spy-q").textContent = room.spyQuestion;
+
+  const list = document.getElementById("reveal-vote-list");
+  list.innerHTML = "";
+  Object.entries(players).forEach(([id, p]) => {
+    const row = document.createElement("div");
+    row.className = "player-row";
+    row.innerHTML = `<div class="av">${p.avatar}</div><div class="nm">${p.name}${id===room.impostorId ? " 🕵️" : ""}</div><span class="host-tag display" style="background: var(--cyan);">${tally[id] || 0} voto(s)</span>`;
+    list.appendChild(row);
+  });
+
+  document.getElementById("next-round-btn").classList.toggle("hidden", !isHost);
+}
+
+function nextRound() {
+  if (!isHost) return;
+  roomRef.child("players").get().then(snap => {
+    const players = snap.val() || {};
+    const ids = Object.keys(players);
+    const pair = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
+    const impostorId = ids[Math.floor(Math.random() * ids.length)];
+    roomRef.update({
+      status: "playing",
+      category: pair.cat,
+      mainQuestion: pair.main,
+      spyQuestion: pair.spy,
+      impostorId: impostorId,
+      votes: null
+    });
+  });
+}
+
+/* =====================================================================
+   6) INICIO — se ejecuta al cargar la página: pinta el perfil guardado
+   y, si estabas en una sala, te reconecta a ella automáticamente.
+   ===================================================================== */
+document.getElementById("profile-name-display").textContent = profile.name;
+document.getElementById("profile-avatar-display").textContent = profile.avatar;
+
+const savedRoom = storage.getItem("mec_lastRoom");
+if (savedRoom) enterRoom(savedRoom);
+</script>
+
+</body>
+</html>
