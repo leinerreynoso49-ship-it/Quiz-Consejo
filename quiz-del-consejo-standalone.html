@@ -1079,6 +1079,8 @@ const BATTLE_QUESTIONS = [
 ];
 
 const QUESTION_TIME = 10; // segundos por pregunta
+const CHOOSE_TIME = 15; // segundos para elegir a quién retar en Modo Batalla
+const BATTLE_POINTS = 100; // puntos que se ganan/pierden por ronda en Modo Batalla
 const COUNT_OPTIONS = [5,10,15,20,30];
 const AVATAR_COLORS = ["#8CFF6B","#FFC93C","#FF4FA3","#34D2FF","#B98CFF","#FF8C5B"];
 
@@ -2145,6 +2147,86 @@ async function advanceSurvivalQuestion(meta){
   }catch(e){ /* ignore */ }
 }
 
+function hostBattleLoop(meta){
+  if(meta.phase === 'choosing'){
+    const elapsed = (Date.now() - meta.roundStartTime)/1000;
+    if(elapsed >= CHOOSE_TIME){
+      state.advancing = true;
+      const newMeta = {...meta, phase:'answering', answererId: meta.challengerId, questionStartTime: Date.now()};
+      window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true)
+        .catch(()=>{}).finally(()=>{ state.advancing = false; });
+    }
+  } else if(meta.phase === 'answering'){
+    const elapsed = (Date.now() - meta.questionStartTime)/1000;
+    const answerer = state.roomPlayers.find(p=>p.id===meta.answererId);
+    const answered = answerer && answerer.answeredQ === meta.currentQuestion;
+    const minRevealTime = 1.2;
+    if((answered && elapsed >= minRevealTime) || elapsed >= QUESTION_TIME + 1.5){
+      state.advancing = true;
+      advanceBattleRound(meta).finally(()=>{ state.advancing = false; });
+    }
+  }
+}
+
+async function advanceBattleRound(meta){
+  const nextQuestion = meta.currentQuestion + 1;
+  let newMeta;
+  if(nextQuestion >= meta.questions.length){
+    newMeta = {...meta, status:'finished'};
+  } else {
+    const nextTurnIndex = (meta.turnIndex + 1) % meta.turnOrder.length;
+    newMeta = {...meta, currentQuestion: nextQuestion, turnIndex: nextTurnIndex,
+      challengerId: meta.turnOrder[nextTurnIndex], answererId: null, phase:'choosing',
+      roundStartTime: Date.now(), questionStartTime: null};
+  }
+  try{
+    await window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true);
+  }catch(e){ /* ignore */ }
+}
+
+async function battleChoose(targetId){
+  const meta = state.roomMeta;
+  if(meta.answererId) return; // ya se eligió, evita doble clic
+  const newMeta = {...meta, phase:'answering', answererId: targetId, questionStartTime: Date.now()};
+  try{
+    await window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true);
+  }catch(e){ /* ignore */ }
+}
+
+async function battleAnswer(choice, q, optsEl){
+  if(state.myAnswered) return;
+  state.myAnswered = true;
+  const buttons = optsEl.querySelectorAll('.option');
+  buttons.forEach((b,i)=>{
+    b.classList.add('locked');
+    if(i===q.a) b.classList.add('correct');
+    else if(i===choice) b.classList.add('wrong');
+  });
+  const correct = choice === q.a;
+  if(correct) burstConfetti();
+
+  const meta = state.roomMeta;
+  const answerer = state.roomPlayers.find(p=>p.id===meta.answererId);
+  const challenger = state.roomPlayers.find(p=>p.id===meta.challengerId);
+  const isSelf = meta.answererId === meta.challengerId;
+
+  try{
+    if(isSelf){
+      const newScore = (answerer ? answerer.score : 0) + (correct ? BATTLE_POINTS : -BATTLE_POINTS);
+      await window.storage.set('room:'+state.roomCode+':players:'+meta.answererId, JSON.stringify({...answerer, score:newScore, answeredQ: meta.currentQuestion}), true);
+    } else {
+      const answererDelta = correct ? BATTLE_POINTS : -BATTLE_POINTS;
+      const challengerDelta = correct ? -BATTLE_POINTS : BATTLE_POINTS;
+      const newAnswererScore = (answerer ? answerer.score : 0) + answererDelta;
+      const newChallengerScore = (challenger ? challenger.score : 0) + challengerDelta;
+      await window.storage.set('room:'+state.roomCode+':players:'+meta.answererId, JSON.stringify({...answerer, score:newAnswererScore, answeredQ: meta.currentQuestion}), true);
+      if(challenger){
+        await window.storage.set('room:'+state.roomCode+':players:'+meta.challengerId, JSON.stringify({...challenger, score:newChallengerScore}), true);
+      }
+    }
+  }catch(e){ /* ignore */ }
+}
+
 function renderRoomLobby(){
   state.roomCoinsAwarded = false;
   resetEliminationTracking();
@@ -2251,6 +2333,7 @@ function renderRoomGame(){
   const q = meta.questions[meta.currentQuestion];
   const me = state.roomPlayers.find(p=>p.id===state.myId) || {score:0};
   const iAmEliminated = meta.mode==='survival' && me.isEliminated;
+  const isBattle = meta.mode==='battle';
 
   const wrap = el('div','screen');
   const hud = el('div','hud');
@@ -2272,6 +2355,11 @@ function renderRoomGame(){
     catPill.style.background='rgba(255,255,255,0.08)';
     catPill.style.color = 'var(--danger)';
     card.appendChild(catPill);
+  } else if(isBattle){
+    const catPill = el('div','pill', '🥊 Batalla');
+    catPill.style.background='rgba(255,255,255,0.08)';
+    catPill.style.color = 'var(--redes)';
+    card.appendChild(catPill);
   } else {
     const cat = CATEGORIES[meta.category];
     const sub = cat.subcategories[meta.subcategory];
@@ -2282,7 +2370,57 @@ function renderRoomGame(){
   }
   card.appendChild(el('div','question-text', q.q));
 
-  if(iAmEliminated){
+  if(isBattle){
+    const challenger = state.roomPlayers.find(p=>p.id===meta.challengerId);
+    const challengerName = challenger ? challenger.name : '—';
+
+    if(meta.phase === 'choosing'){
+      if(state.myId === meta.challengerId){
+        card.appendChild(el('div','muted center','¡Tienes la pregunta! Elige a quién retar, o respóndela tú mismo.'));
+        const choices = el('div','options');
+        const selfBtn = el('button','option');
+        selfBtn.appendChild(el('div','letter','🙋'));
+        selfBtn.appendChild(el('span','','Responder yo mismo'));
+        selfBtn.addEventListener('click', ()=> battleChoose(state.myId));
+        choices.appendChild(selfBtn);
+        state.roomPlayers.filter(p=>p.id!==state.myId).forEach(p=>{
+          const b = el('button','option');
+          b.appendChild(el('div','letter','🎯'));
+          b.appendChild(el('span','','Retar a '+p.name));
+          b.addEventListener('click', ()=> battleChoose(p.id));
+          choices.appendChild(b);
+        });
+        card.appendChild(choices);
+      } else {
+        card.appendChild(el('div','muted center', '🥊 '+challengerName+' está eligiendo a quién retar…'));
+      }
+    } else if(meta.phase === 'answering'){
+      const answerer = state.roomPlayers.find(p=>p.id===meta.answererId);
+      const answererName = answerer ? answerer.name : '—';
+      const isSelfChallenge = meta.answererId === meta.challengerId;
+      if(!isSelfChallenge){
+        const vsPill = el('div','pill', '🥊 '+challengerName+' retó a '+answererName);
+        vsPill.style.background='rgba(255,255,255,0.08)';
+        vsPill.style.color='var(--text)';
+        card.appendChild(vsPill);
+      }
+      if(state.myId === meta.answererId){
+        const opts = el('div','options');
+        const letters = ['A','B','C','D'];
+        q.opts.forEach((optText,i)=>{
+          const o = el('button','option');
+          o.appendChild(el('div','letter', letters[i]));
+          o.appendChild(el('span','', optText));
+          if(state.myAnswered) o.classList.add('locked');
+          o.addEventListener('click', ()=> battleAnswer(i, q, opts));
+          opts.appendChild(o);
+        });
+        card.appendChild(opts);
+      } else {
+        card.appendChild(el('div','muted center', '✍️ '+answererName+' está respondiendo…'));
+      }
+    }
+  } else if(iAmEliminated){
     card.appendChild(el('div','muted center','Estás eliminado — esperando a que termine la ronda…'));
   } else {
     const opts = el('div','options');
@@ -2302,10 +2440,18 @@ function renderRoomGame(){
   app.appendChild(wrap);
 
   function tick(){
-    const elapsed = (Date.now() - meta.questionStartTime)/1000;
-    const pct = Math.max(0, Math.min(100, ((QUESTION_TIME - elapsed)/QUESTION_TIME)*100));
+    let startTime, duration;
+    if(isBattle && meta.phase === 'choosing'){
+      startTime = meta.roundStartTime;
+      duration = CHOOSE_TIME;
+    } else {
+      startTime = meta.questionStartTime;
+      duration = QUESTION_TIME;
+    }
+    const elapsed = (Date.now() - startTime)/1000;
+    const pct = Math.max(0, Math.min(100, ((duration - elapsed)/duration)*100));
     timerBar.style.width = pct + '%';
-    if(elapsed < QUESTION_TIME + 1.5){
+    if(elapsed < duration + 1.5){
       roomTimerRAF = requestAnimationFrame(tick);
     }
   }
@@ -2399,16 +2545,22 @@ function renderRoomResults(){
   if(state.isHost){
     const again = el('button','btn','🔁 Nueva partida (misma sala)');
     again.addEventListener('click', async ()=>{
+      const isBattleReplay = state.roomMeta.mode === 'battle';
       let questions;
       if(isSurvival){
         questions = shuffle(SURVIVAL_QUESTIONS);
+      } else if(isBattleReplay){
+        questions = shuffle(BATTLE_QUESTIONS);
       } else {
         const cat = state.roomMeta.category;
         const subKey = state.roomMeta.subcategory;
         const count = state.roomMeta.questions.length;
         questions = shuffle(pool(cat, subKey)).slice(0,count);
       }
-      const resetMeta = {...state.roomMeta, status:'lobby', currentQuestion:-1, questionStartTime:null, questions};
+      let resetMeta = {...state.roomMeta, status:'lobby', currentQuestion:-1, questionStartTime:null, questions};
+      if(isBattleReplay){
+        resetMeta = {...resetMeta, turnOrder:[], turnIndex:0, phase:'choosing', challengerId:null, answererId:null, roundStartTime:null};
+      }
       await window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(resetMeta), true);
       for(const p of state.roomPlayers){
         await window.storage.set('room:'+state.roomCode+':players:'+p.id, JSON.stringify({...p, score:0, isEliminated:false, eliminatedAtQuestion:undefined, answeredQ:undefined, lastCorrect:undefined}), true);
