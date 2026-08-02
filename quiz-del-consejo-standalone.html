@@ -1201,6 +1201,7 @@ function render(){
     roomSubcategory: ()=>renderSubcategoryScreen('room'),
     roomCount: ()=>renderCountScreen('room'),
     roomJoin: renderRoomJoin,
+    publicRooms: renderPublicRooms,
     roomLobby: renderRoomLobby,
     roomGame: renderRoomGame,
     roomResults: renderRoomResults,
@@ -1290,7 +1291,7 @@ state.ownedAvatars = loadOwnedAvatars();
    Suena en las pantallas de menú y se apaga al entrar a
    una sala o partida.
 --------------------------------------------------------- */
-const MENU_SCREENS = new Set(['home','soloCategory','soloSubcategory','soloCount','roomChoice','roomCreateCategory','roomSubcategory','roomCount','roomJoin','settings','avatarPicker','shop']);
+const MENU_SCREENS = new Set(['home','soloCategory','soloSubcategory','soloCount','roomChoice','roomCreateCategory','roomSubcategory','roomCount','roomJoin','publicRooms','settings','avatarPicker','shop']);
 const menuMusicEl = document.getElementById('menuMusicAudio');
 function applyMusicVolume(){
   if(!menuMusicEl) return;
@@ -1767,7 +1768,7 @@ async function confirmCount(mode, count){
     state.screen = 'soloGame';
     render();
   } else {
-    await createRoom(state.pendingCategory, state.pendingSubKey, count);
+    await createRoom(state.pendingCategory, state.pendingSubKey, count, 'normal', state.pendingIsPublic);
   }
 }
 
@@ -1912,7 +1913,26 @@ function renderRoomChoice(){
   app.appendChild(topBar(goHome));
   const wrap = el('div','screen');
   wrap.appendChild(el('h2','','Jugar con amigos'));
-  wrap.appendChild(el('div','muted','Crea una sala y comparte el código, o únete con uno'));
+  wrap.appendChild(el('div','muted','Elige si tu sala será pública o privada, y qué modo quieres jugar'));
+
+  if(state.pendingIsPublic === undefined) state.pendingIsPublic = false;
+  const toggleRow = el('div','');
+  toggleRow.style.cssText = 'display:flex; gap:8px; margin-bottom:6px;';
+  const privateChip = el('button','btn secondary','🔒 Privada (con código)');
+  const publicChip = el('button','btn secondary','🌐 Pública (sin código)');
+  privateChip.style.cssText = 'flex:1; padding:12px 8px; font-size:0.9rem;';
+  publicChip.style.cssText = 'flex:1; padding:12px 8px; font-size:0.9rem;';
+  function refreshChips(){
+    privateChip.style.outline = !state.pendingIsPublic ? '3px solid #FFD84D' : 'none';
+    publicChip.style.outline = state.pendingIsPublic ? '3px solid #FFD84D' : 'none';
+  }
+  refreshChips();
+  privateChip.addEventListener('click', ()=>{ state.pendingIsPublic = false; refreshChips(); });
+  publicChip.addEventListener('click', ()=>{ state.pendingIsPublic = true; refreshChips(); });
+  toggleRow.appendChild(privateChip);
+  toggleRow.appendChild(publicChip);
+  wrap.appendChild(toggleRow);
+  wrap.appendChild(el('div','muted','Pública: cualquiera puede verla en la lista y unirse con un toque, sin código. Privada: solo entra quien tenga el código.'));
 
   const createBtn = el('button','btn','➕ Crear una sala');
   createBtn.addEventListener('click', ()=>{ state.screen='roomCreateCategory'; render(); });
@@ -1920,19 +1940,71 @@ function renderRoomChoice(){
 
   const survivalBtn = el('button','btn','🔥 Modo Supervivencia');
   survivalBtn.style.background = 'linear-gradient(135deg, var(--danger), #FF9B3C)';
-  survivalBtn.addEventListener('click', ()=> createRoom(null, null, null, 'survival'));
+  survivalBtn.addEventListener('click', ()=> createRoom(null, null, null, 'survival', state.pendingIsPublic));
   wrap.appendChild(survivalBtn);
 
   const battleBtn = el('button','btn','🥊 Modo Batalla');
   battleBtn.style.background = 'linear-gradient(135deg, var(--redes), var(--animes))';
-  battleBtn.addEventListener('click', ()=> createRoom(null, null, null, 'battle'));
+  battleBtn.addEventListener('click', ()=> createRoom(null, null, null, 'battle', state.pendingIsPublic));
   wrap.appendChild(battleBtn);
+
+  const publicListBtn = el('button','btn secondary','🌐 Ver salas públicas');
+  publicListBtn.addEventListener('click', ()=>{ state.screen='publicRooms'; render(); });
+  wrap.appendChild(publicListBtn);
 
   const joinBtn = el('button','btn secondary','🔑 Unirme con un código');
   joinBtn.addEventListener('click', ()=>{ state.screen='roomJoin'; render(); });
   wrap.appendChild(joinBtn);
 
   app.appendChild(wrap);
+}
+
+function renderPublicRooms(){
+  app.appendChild(topBar(()=>{ state.screen='roomChoice'; render(); }));
+  const wrap = el('div','screen');
+  wrap.appendChild(el('h2','','🌐 Salas públicas'));
+  const listWrap = el('div','card');
+  listWrap.appendChild(el('div','muted','Buscando salas abiertas…'));
+  wrap.appendChild(listWrap);
+  app.appendChild(wrap);
+
+  (async ()=>{
+    if(!window.storage) return;
+    try{
+      const listRes = await window.storage.list('room:', true);
+      const metaKeys = (listRes && listRes.keys ? listRes.keys : []).filter(k=>k.endsWith(':meta'));
+      const metas = [];
+      for(const k of metaKeys){
+        try{
+          const res = await window.storage.get(k, true);
+          if(!res) continue;
+          const m = JSON.parse(res.value);
+          if(m.isPublic && m.status === 'lobby'){
+            metas.push(m);
+          }
+        }catch(e){ /* saltar sala con error */ }
+      }
+      listWrap.innerHTML = '';
+      if(metas.length === 0){
+        listWrap.appendChild(el('div','muted','No hay salas públicas abiertas ahora mismo. ¡Crea una tú!'));
+        return;
+      }
+      metas.sort((a,b)=> b.createdAt - a.createdAt);
+      metas.forEach(m=>{
+        const row = el('div','player-row');
+        const label = m.mode==='survival' ? '🔥 Supervivencia' : m.mode==='battle' ? '🥊 Batalla' : '🎯 '+(CATEGORIES[m.category] ? CATEGORIES[m.category].subcategories[m.subcategory].label : 'Quiz');
+        row.appendChild(el('div','name', label + ' — ' + m.code));
+        const joinBtn = el('button','btn secondary','Unirme');
+        joinBtn.style.cssText='width:auto; padding:8px 16px;';
+        joinBtn.addEventListener('click', ()=> joinRoom(m.code));
+        row.appendChild(joinBtn);
+        listWrap.appendChild(row);
+      });
+    }catch(e){
+      listWrap.innerHTML = '';
+      listWrap.appendChild(el('div','muted','No se pudo cargar la lista de salas. Intenta de nuevo.'));
+    }
+  })();
 }
 
 function renderRoomCreateCategory(){
@@ -1943,7 +2015,7 @@ function renderRoomCreateCategory(){
   app.appendChild(wrap);
 }
 
-async function createRoom(categoryKey, subKey, count, mode){
+async function createRoom(categoryKey, subKey, count, mode, isPublic){
   mode = mode || 'normal';
   const code = randCode();
   let questions;
@@ -1952,7 +2024,7 @@ async function createRoom(categoryKey, subKey, count, mode){
   else questions = shuffle(pool(categoryKey, subKey)).slice(0, count);
   const meta = {
     code, category: categoryKey, subcategory: subKey, status: 'lobby', mode,
-    currentQuestion: -1, questionStartTime: null, questions,
+    currentQuestion: -1, questionStartTime: null, questions, isPublic: !!isPublic,
     hostId: state.myId, createdAt: Date.now()
   };
   if(mode === 'battle'){
@@ -2069,6 +2141,25 @@ async function pollRoom(){
     }
 
     if(state.isHost) hostGameLoop(meta);
+    else if(meta.mode === 'battle' && meta.status === 'playing' && !state.advancing){
+      if(meta.phase === 'choosing'){
+        const elapsed = (Date.now() - meta.roundStartTime)/1000;
+        if(elapsed >= CHOOSE_TIME && !meta.answererId){
+          state.advancing = true;
+          const newMeta = {...meta, phase:'answering', answererId: meta.challengerId, questionStartTime: Date.now()};
+          window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true)
+            .catch(()=>{}).finally(()=>{ state.advancing = false; });
+        }
+      } else if(meta.phase === 'answering'){
+        const elapsed = (Date.now() - meta.questionStartTime)/1000;
+        const answerer = state.roomPlayers.find(p=>p.id===meta.answererId);
+        const answered = answerer && answerer.answeredQ === meta.currentQuestion;
+        if((answered && elapsed >= 1.2) || elapsed >= QUESTION_TIME + 1.5){
+          state.advancing = true;
+          advanceBattleRound(meta).finally(()=>{ state.advancing = false; });
+        }
+      }
+    }
   }catch(e){ /* red intermitente: ignorar este ciclo */ }
 }
 
@@ -2236,7 +2327,7 @@ function renderRoomLobby(){
 
   wrap.appendChild(el('div','tagline','Sala de espera'));
   wrap.appendChild(el('div','code-display', state.roomCode));
-  const share = el('div','muted','Comparte este código con tus amigos para que se unan');
+  const share = el('div','muted', state.roomMeta.isPublic ? 'Sala pública — cualquiera puede encontrarla en "Salas públicas" y unirse sin código' : 'Comparte este código con tus amigos para que se unan');
   share.style.textAlign='center';
   wrap.appendChild(share);
 
@@ -2245,6 +2336,10 @@ function renderRoomLobby(){
   pillRow.style.gap='8px';
   pillRow.style.justifyContent='center';
   pillRow.style.flexWrap='wrap';
+  const visibilityPill = el('div','pill', state.roomMeta.isPublic ? '🌐 Pública' : '🔒 Privada');
+  visibilityPill.style.background='rgba(255,255,255,0.08)';
+  visibilityPill.style.color = state.roomMeta.isPublic ? 'var(--redes)' : 'var(--text)';
+  pillRow.appendChild(visibilityPill);
   if(isSurvival){
     const catPill = el('div','pill', '🔥 Supervivencia');
     catPill.style.background='rgba(255,255,255,0.08)';
@@ -2298,6 +2393,7 @@ function renderRoomLobby(){
   wrap.appendChild(card);
 
   if(state.isHost){
+    const needsMorePlayers = isBattle && state.roomPlayers.length < 2;
     const startBtn = el('button','btn','▶️ Iniciar partida');
     startBtn.disabled = isBattle ? state.roomPlayers.length < 2 : state.roomPlayers.length < 1;
     startBtn.addEventListener('click', async ()=>{
@@ -2313,6 +2409,9 @@ function renderRoomLobby(){
       pollRoom();
     });
     wrap.appendChild(startBtn);
+    if(needsMorePlayers){
+      wrap.appendChild(el('div','muted center','⚠️ El Modo Batalla necesita al menos 2 jugadores para poder retarse entre sí. Comparte el código con un amigo para empezar.'));
+    }
   } else {
     wrap.appendChild(el('div','muted','Esperando a que el anfitrión inicie la partida…'));
   }
