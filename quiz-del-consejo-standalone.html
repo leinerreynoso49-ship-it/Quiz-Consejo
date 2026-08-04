@@ -405,8 +405,8 @@ window.storage = (function(){
 
 /* ---------------------------------------------------------
    QUIZ GAMES - banco de preguntas
-   4 categorias, deportes tiene 5 subcategorias.
-   40 preguntas por subcategoria/categoria = 320 en total.
+   4 categorias, deportes tiene 6 subcategorias (incluye UFC).
+   ~40 preguntas por subcategoria/categoria (UFC tiene 50).
 --------------------------------------------------------- */
 const CATEGORIES = {
   deportes: {
@@ -618,6 +618,58 @@ const CATEGORIES = {
         {q:"¿Qué luchador es apodado \"The Viper\"?", opts:["Randy Orton","Edge","Christian","Rob Van Dam"], a:0},
         {q:"¿Qué evento de WWE es conocido por otorgar un contrato de oportunidad titular a quien baje el maletín?", opts:["Money in the Bank","Royal Rumble","King of the Ring","Elimination Chamber"], a:0},
         {q:"¿Qué torneo anual corona a \"El Rey del Ring\"?", opts:["King of the Ring","Royal Rumble","Beat the Clock","Fatal 4-Way"], a:0}
+      ]},
+      ufc: { label:"UFC", emoji:"🥋", questions: [
+        {q:"¿En qué ciudad se celebró el primer evento de la historia, UFC 1, en 1993?", opts:["Las Vegas","Denver","Miami","Los Ángeles"], a:1},
+        {q:"¿Qué peleador brasileño ganó el torneo de UFC 1 gracias a su dominio en Jiu-Jitsu?", opts:["Ken Shamrock","Royce Gracie","Dan Severn","Art Jimmerson"], a:1},
+        {q:"En el UFC 1, ¿qué peleador cayó ante Royce Gracie en la final del torneo?", opts:["Gerard Gordeau","Ken Shamrock","Pat Smith","Kevin Rosier"], a:0},
+        {q:"¿Aproximadamente en qué año introdujo la UFC las categorías de peso oficiales?", opts:["1993","1995","1997","2001"], a:2},
+        {q:"¿En qué año compró Zuffa (los hermanos Fertitta y Dana White) los derechos de la UFC por apenas 2 millones de dólares?", opts:["1999","2001","2005","2007"], a:1},
+        {q:"¿Qué programa de telerrealidad, estrenado en 2005, ayudó a popularizar masivamente a la UFC?", opts:["Fight Camp","The Ultimate Fighter","Cage Wars","MMA Uncut"], a:1},
+        {q:"¿Cómo se llama la jaula octogonal donde se disputan las peleas de UFC?", opts:["El Cuadrilátero","El Octágono","La Arena","El Círculo"], a:1},
+        {q:"¿Cuál fue el primer evento de UFC en presentar una pelea femenil, en 2013?", opts:["UFC 157","UFC 168","UFC 175","UFC 190"], a:0},
+        {q:"¿Qué peleadora derrotó Ronda Rousey en la primera pelea femenil de la historia de UFC?", opts:["Miesha Tate","Liz Carmouche","Cat Zingano","Sara McMann"], a:1},
+        {q:"¿Qué peleadora noqueó a Ronda Rousey con una patada a la cabeza en UFC 193 (2015), acabando con su invicto?", opts:["Cris Cyborg","Miesha Tate","Holly Holm","Amanda Nunes"], a:2},
+        {q:"¿Cuántas defensas de título consecutivas logró Anderson Silva en peso mediano, un récord histórico de UFC?", opts:["8","10","12","14"], a:1},
+        {q:"¿Cuántas peleas ganó Anderson Silva de forma consecutiva en su histórica racha invicta dentro de UFC?", opts:["12","14","16","18"], a:2},
+        {q:"¿A qué edad se convirtió Jon Jones en el campeón más joven de la historia de UFC, tras vencer a Mauricio \"Shogun\" Rua?", opts:["21","23","25","27"], a:1},
+        {q:"¿En qué evento de UFC (2011) Jon Jones ganó por primera vez el título de peso semipesado?", opts:["UFC 126","UFC 128","UFC 135","UFC 140"], a:1},
+        {q:"¿Cuántas defensas de título consecutivas logró Demetrious Johnson en peso mosca, la mayor cifra en la historia de UFC?", opts:["8","9","10","11"], a:3},
+        {q:"¿Con qué récord se retiró invicto Khabib Nurmagomedov de las MMA?", opts:["26-0","27-0","28-0","29-0"], a:3},
+        {q:"¿Cómo terminó la pelea entre Khabib Nurmagomedov y Conor McGregor en UFC 229 (2018)?", opts:["Nocaut en el primer asalto","Sumisión en el cuarto asalto","Decisión unánime","Descalificación"], a:1},
+        {q:"¿Qué peleador se convirtió en el primero en ostentar simultáneamente dos cinturones de UFC (peso pluma y peso ligero) en 2016?", opts:["Nate Diaz","Conor McGregor","Jose Aldo","Frankie Edgar"], a:1},
+        {q:"¿En cuántos segundos noqueó Conor McGregor a José Aldo en UFC 194 (2015)?", opts:["5","13","28","45"], a:1},
+        {q:"¿Qué exestrella de la WWE ganó el título de peso pesado de UFC al vencer a Randy Couture en UFC 91 (2008)?", opts:["Kevin Randleman","Brock Lesnar","Bobby Lashley","Shane Carwin"], a:1},
+        {q:"¿A qué edad ganó Randy Couture el título de peso pesado de UFC en 2007, siendo el campeón de mayor edad de la historia?", opts:["41","43","45","47"], a:2},
+        {q:"¿Cuántas veces se enfrentaron Chuck Liddell y Tito Ortiz en peleas oficiales de UFC?", opts:["2","3","4","5"], a:1},
+        {q:"¿Qué peleador venció a Michael Bisping en 2016 para convertirse en el primer campeón británico de la historia de UFC?", opts:["Nadie, Bisping fue el primer campeón británico","Luke Rockhold","Yoel Romero","Chris Weidman"], a:0},
+        {q:"¿Qué organización de MMA se fusionó con UFC entre 2010 y 2011, aportando divisiones como peso pluma y peso gallo?", opts:["Pride FC","Strikeforce","WEC","Bellator"], a:2},
+        {q:"¿Qué peleadora, apodada \"La Leona\", llegó a ser campeona simultánea de peso gallo y peso pluma en UFC?", opts:["Cris Cyborg","Amanda Nunes","Valentina Shevchenko","Julianna Peña"], a:1},
+        {q:"¿Qué peleadora venció Amanda Nunes en 2018 para unificar el título de peso pluma, tras dominar durante años esa categoría?", opts:["Holly Holm","Cris Cyborg","Germaine de Randamie","Felicia Spencer"], a:1},
+        {q:"¿Qué peleadora se convirtió en la primera campeona china de la historia de UFC, en la división de peso paja?", opts:["Zhang Weili","Joanna Jędrzejczyk","Xiaonan Yan","Angela Hill"], a:0},
+        {q:"¿Qué excampeón de peso paja de UFC, de origen polaco, defendió su título en múltiples ocasiones antes de perderlo ante Rose Namajunas?", opts:["Carla Esparza","Joanna Jędrzejczyk","Michelle Waterson","Claudia Gadelha"], a:1},
+        {q:"¿Qué expresidente de WWE luchó en UFC en 2016, perdiendo por sumisión ante Mickey Gall?", opts:["Kurt Angle","CM Punk","Batista","Bobby Lashley"], a:1},
+        {q:"¿Qué legendario peleador ruso de peso pesado, considerado de los mejores de la historia, nunca llegó a competir en UFC?", opts:["Fedor Emelianenko","Igor Vovchanchyn","Mirko Cro Cop","Semmy Schilt"], a:0},
+        {q:"¿Qué peleador logró el nocaut más rápido en la historia de UFC, en solo 5 segundos, al derrotar a Ben Askren en UFC 239 (2019)?", opts:["Jorge Masvidal","Conor McGregor","Colby Covington","Nate Diaz"], a:0},
+        {q:"¿Qué peleador venció a Max Holloway para arrebatarle el título de peso pluma en 2019, iniciando una rivalidad de tres peleas?", opts:["Brian Ortega","Alexander Volkanovski","Frankie Edgar","Zabit Magomedsharipov"], a:1},
+        {q:"¿Cuántas defensas de título logró Stipe Miocic en su primer reinado como campeón de peso pesado, marcando un récord de la división en su momento?", opts:["2","3","4","5"], a:1},
+        {q:"¿Qué peleador venció a Stipe Miocic en 2018 para convertirse en campeón simultáneo de peso semipesado y peso pesado?", opts:["Francis Ngannou","Daniel Cormier","Alistair Overeem","Curtis Blaydes"], a:1},
+        {q:"¿En qué evento de 2010 noqueó Cain Velasquez a Brock Lesnar en el primer asalto para ganar el título de peso pesado?", opts:["UFC 116","UFC 118","UFC 121","UFC 125"], a:2},
+        {q:"¿Qué peleador brasileño sometió a Cain Velasquez en 2015 para ganar el título de peso pesado de UFC?", opts:["Junior dos Santos","Fabricio Werdum","Antônio Rodrigo Nogueira","Gabriel Gonzaga"], a:1},
+        {q:"¿En qué evento de 2016 sometió Nate Diaz a Conor McGregor por primera vez, en un cambio de categoría de peso?", opts:["UFC 194","UFC 196","UFC 202","UFC 205"], a:1},
+        {q:"¿Cuál es el apodo del expeleador Georges St-Pierre, campeón de peso wélter y peso mediano?", opts:["Rush","The Natural","The Iceman","The Spider"], a:0},
+        {q:"¿Cuál es el apodo del expeleador Chuck Liddell, ícono del peso semipesado?", opts:["Rush","The Iceman","The Natural","The Spider"], a:1},
+        {q:"¿Cuál es el apodo con el que se conoce a Anderson Silva, leyenda del peso mediano?", opts:["The Spider","The Notorious","The Eagle","The Reaper"], a:0},
+        {q:"¿Cómo se conoce popularmente a Khabib Nurmagomedov, invicto campeón de peso ligero?", opts:["The Eagle","The Iceman","The Assassin","The Predator"], a:0},
+        {q:"¿Cómo se conoce popularmente a Conor McGregor en la escena de UFC?", opts:["The Notorious","The Spider","The Reaper","The Diamond"], a:0},
+        {q:"¿Con qué apodo se conoce a Israel Adesanya, excampeón de peso mediano originario de Nigeria?", opts:["The Last Stylebender","The Assassin","The Eagle","The African King"], a:0},
+        {q:"¿Cuántos jueces determinan típicamente el resultado de una pelea de UFC que llega a la decisión?", opts:["1","2","3","5"], a:2},
+        {q:"¿Bajo qué sistema de puntuación se juzgan oficialmente los asaltos en UFC?", opts:["Sistema de 10 puntos obligatorios","Sistema de puntos acumulados","Sistema de golpes efectivos","Sistema de mayoría simple"], a:0},
+        {q:"¿Cuál es el nombre del célebre presentador de UFC conocido por la frase \"It's time!\" al anunciar a los peleadores?", opts:["Joe Rogan","Bruce Buffer","Jon Anik","Dana White"], a:1},
+        {q:"¿Quién ha sido, durante décadas, el comentarista de color más reconocido en las transmisiones de UFC?", opts:["Joe Rogan","Mike Goldberg","Daniel Cormier","Dominick Cruz"], a:0},
+        {q:"¿Quién es el presidente de UFC desde que Zuffa adquirió la organización en 2001?", opts:["Lorenzo Fertitta","Dana White","Frank Fertitta III","Ari Emanuel"], a:1},
+        {q:"¿Aproximadamente en cuántos miles de millones de dólares se vendió UFC al grupo WME-IMG en 2016?", opts:["2","4","6","8"], a:1},
+        {q:"¿En qué evento de 2015 logró Ronda Rousey la finalización más rápida en una pelea por el título de UFC, con un armlock en solo 14 segundos ante Cat Zingano?", opts:["UFC 175","UFC 184","UFC 190","UFC 193"], a:1}
       ]}
     }
   },
@@ -1080,6 +1132,7 @@ const BATTLE_QUESTIONS = [
 
 const QUESTION_TIME = 10; // segundos por pregunta
 const CHOOSE_TIME = 15; // segundos para elegir a quién retar en Modo Batalla
+const NONHOST_FALLBACK_BUFFER = 4; // segundos extra que esperan los NO-anfitriones antes de actuar como respaldo, para que el anfitrión siempre gane la carrera primero
 const BATTLE_POINTS = 100; // puntos que se ganan/pierden por ronda en Modo Batalla
 const COUNT_OPTIONS = [5,10,15,20,30];
 const AVATAR_COLORS = ["#8CFF6B","#FFC93C","#FF4FA3","#34D2FF","#B98CFF","#FF8C5B"];
@@ -2142,9 +2195,11 @@ async function pollRoom(){
 
     if(state.isHost) hostGameLoop(meta);
     else if(meta.mode === 'battle' && meta.status === 'playing' && !state.advancing){
+      // Los no-anfitriones solo actúan como respaldo (por si el anfitrión se desconectó),
+      // nunca al mismo tiempo que él, para no pelear por la misma escritura y causar parpadeo.
       if(meta.phase === 'choosing'){
         const elapsed = (Date.now() - meta.roundStartTime)/1000;
-        if(elapsed >= CHOOSE_TIME && !meta.answererId){
+        if(elapsed >= CHOOSE_TIME + NONHOST_FALLBACK_BUFFER && !meta.answererId){
           state.advancing = true;
           const newMeta = {...meta, phase:'answering', answererId: meta.challengerId, questionStartTime: Date.now()};
           window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true)
@@ -2154,7 +2209,7 @@ async function pollRoom(){
         const elapsed = (Date.now() - meta.questionStartTime)/1000;
         const answerer = state.roomPlayers.find(p=>p.id===meta.answererId);
         const answered = answerer && answerer.answeredQ === meta.currentQuestion;
-        if((answered && elapsed >= 1.2) || elapsed >= QUESTION_TIME + 1.5){
+        if((answered && elapsed >= 1.2 + NONHOST_FALLBACK_BUFFER) || elapsed >= QUESTION_TIME + 1.5 + NONHOST_FALLBACK_BUFFER){
           state.advancing = true;
           advanceBattleRound(meta).finally(()=>{ state.advancing = false; });
         }
@@ -2241,7 +2296,7 @@ async function advanceSurvivalQuestion(meta){
 function hostBattleLoop(meta){
   if(meta.phase === 'choosing'){
     const elapsed = (Date.now() - meta.roundStartTime)/1000;
-    if(elapsed >= CHOOSE_TIME){
+    if(elapsed >= CHOOSE_TIME && !meta.answererId){
       state.advancing = true;
       const newMeta = {...meta, phase:'answering', answererId: meta.challengerId, questionStartTime: Date.now()};
       window.storage.set('room:'+state.roomCode+':meta', JSON.stringify(newMeta), true)
@@ -2477,16 +2532,17 @@ function renderRoomGame(){
       if(state.myId === meta.challengerId){
         card.appendChild(el('div','muted center','¡Tienes la pregunta! Elige a quién retar, o respóndela tú mismo.'));
         const choices = el('div','options');
+        const lockChoiceButtons = ()=> choices.querySelectorAll('.option').forEach(btn=> btn.classList.add('locked'));
         const selfBtn = el('button','option');
         selfBtn.appendChild(el('div','letter','🙋'));
         selfBtn.appendChild(el('span','','Responder yo mismo'));
-        selfBtn.addEventListener('click', ()=> battleChoose(state.myId));
+        selfBtn.addEventListener('click', ()=> { if(state.roomMeta.answererId) return; lockChoiceButtons(); battleChoose(state.myId); });
         choices.appendChild(selfBtn);
         state.roomPlayers.filter(p=>p.id!==state.myId).forEach(p=>{
           const b = el('button','option');
           b.appendChild(el('div','letter','🎯'));
           b.appendChild(el('span','','Retar a '+p.name));
-          b.addEventListener('click', ()=> battleChoose(p.id));
+          b.addEventListener('click', ()=> { if(state.roomMeta.answererId) return; lockChoiceButtons(); battleChoose(p.id); });
           choices.appendChild(b);
         });
         card.appendChild(choices);
